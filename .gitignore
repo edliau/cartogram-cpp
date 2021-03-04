@@ -47,3 +47,20 @@ _deps
 # Added by MTG
 cartogram
 *.eps
+build/findFFTW-download/CMakeLists.txt
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-build
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-configure
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-done
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-download
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-gitclone-lastrun.txt
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-gitinfo.txt
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-install
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-mkdir
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-patch
+build/findFFTW-download/findFFTW_download-prefix/src/findFFTW_download-stamp/findFFTW_download-test
+build/findFFTW-download/findFFTW_download-prefix/tmp/findFFTW_download-cfgcmd.txt
+build/findFFTW-download/findFFTW_download-prefix/tmp/findFFTW_download-cfgcmd.txt.in
+build/findFFTW-download/findFFTW_download-prefix/tmp/findFFTW_download-gitclone.cmake
+build/findFFTW-download/findFFTW_download-prefix/tmp/findFFTW_download-gitupdate.cmake
+build/findFFTW-src/
+.DS_Store

@@ -118,7 +118,7 @@ void write_map_to_eps(std::string eps_name, MapState *map_state)
   std::ofstream eps_file(eps_name);
   write_eps_header_and_definitions(eps_file, eps_name, map_state);
   write_polygons_to_eps(eps_file,
-                        true,
+                        false,
                         !(map_state->colors_empty()),
                         map_state);
   eps_file << "showpage\n";

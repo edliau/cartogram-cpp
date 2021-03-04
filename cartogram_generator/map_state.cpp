@@ -9,6 +9,18 @@ MapState::MapState(std::string v, const bool w, const bool wd2eps) :
   return;
 }
 
+MapState::MapState()
+{
+  n_finished_integrations_ = 0;
+  return;
+}
+
+void MapState::set_geo_divs(std::vector<GeoDiv> geo_divs_new)
+{
+  geo_divs_.clear();
+  geo_divs_ = geo_divs_new;
+}
+
 MapState::~MapState()
 {
   fftw_destroy_plan(fwd_plan_for_rho_);

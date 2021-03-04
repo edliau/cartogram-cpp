@@ -27,10 +27,12 @@ private:
   FTReal2d rho_ft_;  // Fourier transform
   fftw_plan fwd_plan_for_rho_, bwd_plan_for_rho_;
   unsigned int n_finished_integrations_;
-  MapState();
+  // MapState();
 public:
   explicit MapState(const std::string, const bool, const bool);
+  MapState();
   ~MapState();
+  void set_geo_divs(std::vector<GeoDiv> geo_divs_new);
   unsigned int n_geo_divs() const;
   const std::vector<GeoDiv> geo_divs() const;
   std::vector<GeoDiv> *ref_to_geo_divs();
