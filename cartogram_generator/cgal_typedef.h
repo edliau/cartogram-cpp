@@ -6,6 +6,7 @@
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Epick;
 typedef CGAL::Polygon_2<Epick> Polygon;
+typedef Polygon Triangle;
 typedef CGAL::Polygon_with_holes_2<Epick> Polygon_with_holes;
 typedef CGAL::Aff_transformation_2<Epick> Transformation;
 typedef CGAL::Segment_2<Epick> Segment;

@@ -60,6 +60,7 @@ add_executable(cartogram ../cartogram_generator/main.cpp
           		../cartogram_generator/write_eps.cpp
               ../cartogram_generator/colors.cpp
               # ../cartogram_generator/topological_checks.cpp
+              ../cartogram_generator/matrix.cpp
               ../cartogram_generator/densification_points.cpp
           		../cartogram_generator/read_geojson.cpp
           		../cartogram_generator/fill_with_density.cpp

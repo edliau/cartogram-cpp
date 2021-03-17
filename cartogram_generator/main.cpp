@@ -10,6 +10,7 @@
 #include "rescale_map.h"
 #include "write_eps.h"
 #include "densification_points.h"
+#include "matrix.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <CGAL/Boolean_set_operations_2.h>
@@ -29,68 +30,6 @@ void on_visual_variable_file(const std::string geometry_file_name)
             << std::endl;
   return;
 }
-
-struct Matrix {
-
-  // all positions of matrix
-  double p11, p12, p13, p21, p22, p23, p31, p32, p33;
-
-  Matrix() {
-    return;
-  }
-
-  // Matrix from a triangle
-  Matrix(Polygon p) {
-
-    p31 = 1;
-    p32 = 1;
-    p33 = 1;
-
-  }
-
-  double scale(double multiplier) {
-
-    p11 = p11 * multiplier;
-    p12 = p12 * multiplier;
-    p13 = p13 * multiplier;
-    p21 = p21 * multiplier;
-    p22 = p22 * multiplier;
-    p23 = p23 * multiplier;
-    p31 = p31 * multiplier;
-    p32 = p32 * multiplier;
-    p33 = p33 * multiplier;
-
-  }
-
-  void print() {
-    std::cout << p11 << " " << p12 << " " << p13 << "\n\n";
-    std::cout << p21 << " " << p22 << " " << p23 << "\n\n";
-    std::cout << p31 << " " << p32 << " " << p33 << "\n\n";
-  }
-
-  // calculate determinant
-  double det() {
-    return p11 * ((p22 * p33) - (p23 * p32)) -
-           p12 * ((p21 * p33) - (p23 * p31)) +
-           p13 * ((p21 * p32) - (p22 * p31));
-  }
-
-  Matrix adjugate() {
-    Matrix inv;
-
-    inv.p11 = ((p22 * p33) - (p23 * p32));
-    inv.p21 = - ((p21 * p33) - (p23 * p31));
-    inv.p31 = ((p21 * p32) - (p22 * p31));
-    inv.p12 = - ((p12 * p33) - (p13 * p32));
-    inv.p22 = ((p11 * p33) - (p13 * p31));
-    inv.p32 = - ((p11 * p32) - (p12 * p31));
-    inv.p13 = ((p12 * p23) - (p13 * p22));
-    inv.p23 = - ((p11 * p23) - (p13 * p21));
-    inv.p33 = ((p11 * p22) - (p12 * p21));
-
-  }
-
-};
 
 int main(const int argc, const char *argv[])
 {
@@ -187,12 +126,12 @@ int main(const int argc, const char *argv[])
   //   return EXIT_FAILURE;
   // }
 
-  MapState map_state;;
+  MapState map_state;
   map_state.make_grid(64, 64);
 
   std::vector<Polygon> holes;
 
-  GeoDiv gd_old_grat("old_grat");;
+  GeoDiv gd_old_grat("old_grat");
 
   // old graticule cell
   Polygon old_graticule;
@@ -202,6 +141,7 @@ int main(const int argc, const char *argv[])
   old_graticule.push_back(Point(16, 32));
   Polygon_with_holes old_grat(old_graticule, holes.begin(), holes.end());
 
+  // divided into triangles
   Polygon old_tri_right;
   old_tri_right.push_back(Point(16, 16));
   old_tri_right.push_back(Point(32, 16));
@@ -243,6 +183,7 @@ int main(const int argc, const char *argv[])
   gd_new_grat.push_back(new_grat);
   new_map.push_back(gd_new_grat);
 
+  // divided into triangles
   Polygon new_tri_right;
   new_tri_right.push_back(Point(16, 16));
   new_tri_right.push_back(Point(32, 16));
@@ -253,15 +194,18 @@ int main(const int argc, const char *argv[])
   new_tri_left.push_back(Point(16, 32));
   new_tri_left.push_back(Point(21, 21));
 
+  CGAL::set_pretty_mode(std::cout);
+
   // figure out new polygon
   // iterate through points in map_state
 
   // given: map_state
 
   for (GeoDiv gd : map_state.geo_divs()) {
-    GeoDiv temp_geodiv("test");
-    for (Polygon_with_holes pwh : gd.polygons_with_holes()) {
 
+    GeoDiv temp_geodiv("test");
+
+    for (Polygon_with_holes pwh : gd.polygons_with_holes()) {
 
       Polygon temp_ext_boundary;
       for (Point p : pwh.outer_boundary()) {
@@ -278,104 +222,68 @@ int main(const int argc, const char *argv[])
 
         // use triangle formula, depending on wheher point is in triangle or not
 
-        double ainv11, ainv12, ainv13, ainv21, ainv22, ainv23, ainv31, ainv32, ainv33, t11, t12, t13, t21, t22, t23, det, new_x, new_y;
+        // Suppose we find that, before the cartogram transformation, a point (x, y)
+        // is in the triangle (a, b, c). We want to find its position in
+        // the projected triangle (p, q, r). We locally approximate the cartogram
+        // transformation by an affine transformation T such that T(a) = p,
+        // T(b) = q and T(c) = r. We can think of T as a 3x3 matrix
+        //  /t11 t12 t13\
+        // | t21 t22 t23 |  such that
+        //  \ 0   0   1 /
+        //  /t11 t12 t13\   /a1 b1 c1\     /p1 q1 r1\
+        // | t21 t22 t23 | | a2 b2 c2 | = | p2 q2 r2 | or TA = P. Hence T = PA^{-1}
+        //  \ 0   0   1 /   \ 1  1  1/     \ 1  1  1/
+        //                              /b2-c2 c1-b1 b1*c2-b2*c1\
+        // We have A^{-1} = (1/det(A)) | c2-a2 a1-c1 a2*c1-a1*c2 |. By multiplying
+        //                              \a2-b2 b1-a1 a1*b2-a2*b1/
+        // PA^{-1} we obtain t11, t12, t13, t21, t22, t23. The preimage of (x, y) i
+        // the unprojected map is then "pre" with coordinates
+        // pre.x = t11*x + t12*y + t13, pre.y = t21*x + t22*y + t23.
+
+        Triangle old_tri;
+        Triangle new_tri;
 
         if (old_tri_left.bounded_side(p) == CGAL::ON_BOUNDED_SIDE ||
             old_tri_left.bounded_side(p) == CGAL::ON_BOUNDARY) {
 
+              old_tri = old_tri_left;
+              new_tri = new_tri_left;
 
-              /**************************** Determinant of A. ****************************/
-
-             det = old_tri_left[0][0] * old_tri_left[1][1] + old_tri_left[1][0] * old_tri_left[2][1] + old_tri_left[2][0] * old_tri_left[0][1]
-                   - old_tri_left[1][0] * old_tri_left[0][1] - old_tri_left[2][0] * old_tri_left[1][1] - old_tri_left[0][0] * old_tri_left[2][1];
-
-             /*********** Compute det(A) * A^{-1}. We divide by det(A) later. ***********/
-
-             ainv11 = old_tri_left[1][1] - old_tri_left[2][1];
-             ainv12 = old_tri_left[2][0] - old_tri_left[1][0];
-             ainv13 = old_tri_left[1][0] * old_tri_left[2][1] - old_tri_left[1][1] * old_tri_left[2][0];
-             ainv21 = old_tri_left[2][1] - old_tri_left[0][1];
-             ainv22 = old_tri_left[0][0] - old_tri_left[2][0];
-             ainv23 = old_tri_left[0][1] * old_tri_left[2][0] - old_tri_left[0][0] * old_tri_left[2][1];
-             ainv31 = old_tri_left[0][1] - old_tri_left[1][1];
-             ainv32 = old_tri_left[1][0] - old_tri_left[0][0];
-             ainv33 = old_tri_left[0][0] * old_tri_left[1][1] - old_tri_left[0][1] * old_tri_left[1][0];
-
-             /******************************** Compute T. *******************************/
-
-             t11 = new_tri_left[0][0] * ainv11 + new_tri_left[1][0] * ainv21 + new_tri_left[2][0] * ainv31;
-             t12 = new_tri_left[0][0] * ainv12 + new_tri_left[1][0] * ainv22 + new_tri_left[2][0] * ainv32;
-             t13 = new_tri_left[0][0] * ainv13 + new_tri_left[1][0] * ainv23 + new_tri_left[2][0] * ainv33;
-             t21 = new_tri_left[0][1] * ainv11 + new_tri_left[1][1] * ainv21 + new_tri_left[2][1] * ainv31;
-             t22 = new_tri_left[0][1] * ainv12 + new_tri_left[1][1] * ainv22 + new_tri_left[2][1] * ainv32;
-             t23 = new_tri_left[0][1] * ainv13 + new_tri_left[1][1] * ainv23 + new_tri_left[2][1] * ainv33;
-
-             /********************* Transform the input coordinates. ********************/
-
-             new_x = (t11*(p[0]) + t12*(p[1]) + t13) / det;
-             new_y = (t21*(p[0]) + t22*(p[1]) + t23) / det;
-
-              // find transformation matrix
-
-              // transform point using transformation matrix
             }
-            else if (old_tri_right.bounded_side(p) == CGAL::ON_BOUNDED_SIDE ||
-                old_tri_right.bounded_side(p) == CGAL::ON_BOUNDARY) {
+        else if (old_tri_right.bounded_side(p) == CGAL::ON_BOUNDED_SIDE ||
+            old_tri_right.bounded_side(p) == CGAL::ON_BOUNDARY) {
 
-                  /**************************** Determinant of A. ****************************/
+              old_tri = old_tri_right;
+              new_tri = new_tri_right;
 
-                 det = old_tri_right[0][0] * old_tri_right[1][1] + old_tri_right[1][0] * old_tri_right[2][1] + old_tri_right[2][0] * old_tri_right[0][1]
-                       - old_tri_right[1][0] * old_tri_right[0][1] - old_tri_right[2][0] * old_tri_right[1][1] - old_tri_right[0][0] * old_tri_right[2][1];
+            }
 
-                 /*********** Compute det(A) * A^{-1}. We divide by det(A) later. ***********/
+        // Old triangle (a, b, c) as a matrix
+        Matrix abc_mA = old_tri; // also matrix A
 
-                 ainv11 = old_tri_right[1][1] - old_tri_right[2][1];
-                 ainv12 = old_tri_right[2][0] - old_tri_right[1][0];
-                 ainv13 = old_tri_right[1][0] * old_tri_right[2][1] - old_tri_right[1][1] * old_tri_right[2][0];
-                 ainv21 = old_tri_right[2][1] - old_tri_right[0][1];
-                 ainv22 = old_tri_right[0][0] - old_tri_right[2][0];
-                 ainv23 = old_tri_right[0][1] * old_tri_right[2][0] - old_tri_right[0][0] * old_tri_right[2][1];
-                 ainv31 = old_tri_right[0][1] - old_tri_right[1][1];
-                 ainv32 = old_tri_right[1][0] - old_tri_right[0][0];
-                 ainv33 = old_tri_right[0][0] * old_tri_right[1][1] - old_tri_right[0][1] * old_tri_right[1][0];
+        // New triangle (p, q, r) as a matrix
+        Matrix pqr_mP = new_tri; // also matrix P
 
-                 /******************************** Compute T. *******************************/
+        // Calculating transformation matrix
+        Matrix mT = pqr_mP.multiply(abc_mA.inverse());
 
-                 t11 = new_tri_right[0][0] * ainv11 + new_tri_right[1][0] * ainv21 + new_tri_right[2][0] * ainv31;
-                 t12 = new_tri_right[0][0] * ainv12 + new_tri_right[1][0] * ainv22 + new_tri_right[2][0] * ainv32;
-                 t13 = new_tri_right[0][0] * ainv13 + new_tri_right[1][0] * ainv23 + new_tri_right[2][0] * ainv33;
-                 t21 = new_tri_right[0][1] * ainv11 + new_tri_right[1][1] * ainv21 + new_tri_right[2][1] * ainv31;
-                 t22 = new_tri_right[0][1] * ainv12 + new_tri_right[1][1] * ainv22 + new_tri_right[2][1] * ainv32;
-                 t23 = new_tri_right[0][1] * ainv13 + new_tri_right[1][1] * ainv23 + new_tri_right[2][1] * ainv33;
-
-                 /********************* Transform the input coordinates. ********************/
-
-                 new_x = (t11*(p[0]) + t12*(p[1]) + t13) / det;
-                 new_y = (t21*(p[0]) + t22*(p[1]) + t23) / det;
-
-                  // find transformation matrix
-
-                  // transform point using transformation matrix
-                }
-
-            Point transformed(new_x, new_y);
-            temp_ext_boundary.push_back(transformed);
-
-          }
-
-          Polygon_with_holes temp_pwh(temp_ext_boundary, holes.begin(), holes.end());
-          temp_geodiv.push_back(temp_pwh);
+        // Transforming point and pushing back to temporary_ext_boundary
+        Point transformed = mT.transform_point(p);
+        temp_ext_boundary.push_back(transformed);
       }
-      new_map.push_back(temp_geodiv);
+      Polygon_with_holes temp_pwh(temp_ext_boundary, holes.begin(), holes.end());
+      temp_geodiv.push_back(temp_pwh);
     }
+    new_map.push_back(temp_geodiv);
+  }
 
-    map_state.push_back(gd_old_grat);
-    // Rescale map to fit into a rectangular box [0, lx] * [0, ly].
-    // rescale_map(long_grid_side_length, &map_state);
-    // if (input_polygons_to_eps) {
-      std::cout << "Writing input_polygons.eps" << std::endl;
-      write_map_to_eps("input_polygons.eps", &map_state);
-    // // }
+  map_state.push_back(gd_old_grat);
+  // Rescale map to fit into a rectangular box [0, lx] * [0, ly].
+  // rescale_map(long_grid_side_length, &map_state);
+  // if (input_polygons_to_eps) {
+    std::cout << "Writing input_polygons.eps" << std::endl;
+    write_map_to_eps("input_polygons.eps", &map_state);
+  // // }
 
   map_state.set_geo_divs(new_map);
 
@@ -384,3 +292,81 @@ int main(const int argc, const char *argv[])
 
   return EXIT_SUCCESS;
 }
+
+        // if (old_tri_left.bounded_side(p) == CGAL::ON_BOUNDED_SIDE ||
+        //     old_tri_left.bounded_side(p) == CGAL::ON_BOUNDARY) {
+
+
+            //   /**************************** Determinant of A. ****************************/
+            //
+            //  det = old_tri_left[0][1] * old_tri_left[1][1] + old_tri_left[1][0] * old_tri_left[2][1] + old_tri_left[2][0] * old_tri_left[0][1]
+            //        - old_tri_left[1][0] * old_tri_left[0][1] - old_tri_left[2][0] * old_tri_left[1][1] - old_tri_left[0][0] * old_tri_left[2][1];
+            //
+            //  /*********** Compute det(A) * A^{-1}. We divide by det(A) later. ***********/
+            //
+            //  ainv11 = old_tri_left[1][1] - old_tri_left[2][1];
+            //  ainv12 = old_tri_left[2][0] - old_tri_left[1][0];
+            //  ainv13 = old_tri_left[1][0] * old_tri_left[2][1] - old_tri_left[1][1] * old_tri_left[2][0];
+            //  ainv21 = old_tri_left[2][1] - old_tri_left[0][1];
+            //  ainv22 = old_tri_left[0][0] - old_tri_left[2][0];
+            //  ainv23 = old_tri_left[0][1] * old_tri_left[2][0] - old_tri_left[0][0] * old_tri_left[2][1];
+            //  ainv31 = old_tri_left[0][1] - old_tri_left[1][1];
+            //  ainv32 = old_tri_left[1][0] - old_tri_left[0][0];
+            //  ainv33 = old_tri_left[0][0] * old_tri_left[1][1] - old_tri_left[0][1] * old_tri_left[1][0];
+            //
+            //  /******************************** Compute T. *******************************/
+            //
+            //  t11 = new_tri_left[0][0] * ainv11 + new_tri_left[1][0] * ainv21 + new_tri_left[2][0] * ainv31;
+            //  t12 = new_tri_left[0][0] * ainv12 + new_tri_left[1][0] * ainv22 + new_tri_left[2][0] * ainv32;
+            //  t13 = new_tri_left[0][0] * ainv13 + new_tri_left[1][0] * ainv23 + new_tri_left[2][0] * ainv33;
+            //  t21 = new_tri_left[0][1] * ainv11 + new_tri_left[1][1] * ainv21 + new_tri_left[2][1] * ainv31;
+            //  t22 = new_tri_left[0][1] * ainv12 + new_tri_left[1][1] * ainv22 + new_tri_left[2][1] * ainv32;
+            //  t23 = new_tri_left[0][1] * ainv13 + new_tri_left[1][1] * ainv23 + new_tri_left[2][1] * ainv33;
+            //
+            //  /********************* Transform the input coordinates. ********************/
+            //
+            //  new_x = (t11*(p[0]) + t12*(p[1]) + t13) / det;
+            //  new_y = (t21*(p[0]) + t22*(p[1]) + t23) / det;
+            //
+            //   // find transformation matrix
+            //
+            //   // transform point using transformation matrix
+            // }
+            // else if (old_tri_right.bounded_side(p) == CGAL::ON_BOUNDED_SIDE ||
+            //     old_tri_right.bounded_side(p) == CGAL::ON_BOUNDARY) {
+            //
+            //       /**************************** Determinant of A. ****************************/
+            //
+            //      det = old_tri_right[0][0] * old_tri_right[1][1] + old_tri_right[1][0] * old_tri_right[2][1] + old_tri_right[2][0] * old_tri_right[0][1]
+            //            - old_tri_right[1][0] * old_tri_right[0][1] - old_tri_right[2][0] * old_tri_right[1][1] - old_tri_right[0][0] * old_tri_right[2][1];
+            //
+            //      /*********** Compute det(A) * A^{-1}. We divide by det(A) later. ***********/
+            //
+            //      ainv11 = old_tri_right[1][1] - old_tri_right[2][1];
+            //      ainv12 = old_tri_right[2][0] - old_tri_right[1][0];
+            //      ainv13 = old_tri_right[1][0] * old_tri_right[2][1] - old_tri_right[1][1] * old_tri_right[2][0];
+            //      ainv21 = old_tri_right[2][1] - old_tri_right[0][1];
+            //      ainv22 = old_tri_right[0][0] - old_tri_right[2][0];
+            //      ainv23 = old_tri_right[0][1] * old_tri_right[2][0] - old_tri_right[0][0] * old_tri_right[2][1];
+            //      ainv31 = old_tri_right[0][1] - old_tri_right[1][1];
+            //      ainv32 = old_tri_right[1][0] - old_tri_right[0][0];
+            //      ainv33 = old_tri_right[0][0] * old_tri_right[1][1] - old_tri_right[0][1] * old_tri_right[1][0];
+            //
+            //      /******************************** Compute T. *******************************/
+            //
+            //      t11 = new_tri_right[0][0] * ainv11 + new_tri_right[1][0] * ainv21 + new_tri_right[2][0] * ainv31;
+            //      t12 = new_tri_right[0][0] * ainv12 + new_tri_right[1][0] * ainv22 + new_tri_right[2][0] * ainv32;
+            //      t13 = new_tri_right[0][0] * ainv13 + new_tri_right[1][0] * ainv23 + new_tri_right[2][0] * ainv33;
+            //      t21 = new_tri_right[0][1] * ainv11 + new_tri_right[1][1] * ainv21 + new_tri_right[2][1] * ainv31;
+            //      t22 = new_tri_right[0][1] * ainv12 + new_tri_right[1][1] * ainv22 + new_tri_right[2][1] * ainv32;
+            //      t23 = new_tri_right[0][1] * ainv13 + new_tri_right[1][1] * ainv23 + new_tri_right[2][1] * ainv33;
+            //
+            //      /********************* Transform the input coordinates. ********************/
+            //
+            //      new_x = (t11*(p[0]) + t12*(p[1]) + t13) / det;
+            //      new_y = (t21*(p[0]) + t22*(p[1]) + t23) / det;
+            //
+            //       // find transformation matrix
+            //
+            //       // transform point using transformation matrix
+                // }
