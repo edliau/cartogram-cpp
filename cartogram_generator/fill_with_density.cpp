@@ -31,6 +31,53 @@ bool line_y_intersects(XYPoint a,
   return false;
 }
 
+// takes a Polygon (or the exterior boundary of a Polygon_with_holes)
+// and a y coordinate, line_y, and returns the midpoint of the longest line
+// segment where y = line_y
+XYPoint line_y_midpoint_inside_polygon(double line_y, Polygon poly) {
+
+          // Default resolution
+          double epsilon = 1e-6 * (1.0/16);
+
+          // Vector to store intersections
+          std::vector<intersection> intersections;
+
+          // Setting up previous point to form segment (curr_point, prev_point)
+          XYPoint prev_point;
+          prev_point.x = poly[poly.size()-1][0];
+          prev_point.y = poly[poly.size()-1][1];
+
+          // Finding all the intersections
+          for (unsigned int l = 0; l < poly.size(); ++l) {
+            XYPoint curr_point;
+            curr_point.x = poly[l][0];
+            curr_point.y = poly[l][1];
+            intersection temp;
+
+            // Function to calculate whether intersection exists between
+            // segment (prev_point, curr_point) and line_y
+            if (line_y_intersects(curr_point,
+                                  prev_point,
+                                  line_y,
+                                  &temp,
+                                  0, // no target_density required
+                                  epsilon)) {
+              intersections.push_back(temp);
+            }
+            prev_point.x = curr_point.x;
+            prev_point.y = curr_point.y;
+          }
+
+          // Making final mid_point and returning it
+          XYPoint mid_point;
+          mid_point.x = (intersections[0].x +
+                         intersections[intersections.size() - 1].x) / 2;
+          mid_point.y = line_y;
+          return mid_point;
+}
+// example use:
+// line_y_midpoint_inside_polygon(32.5, pwh.outer_boundary());
+
 
 void fill_with_density(MapState* map_state)
 {
