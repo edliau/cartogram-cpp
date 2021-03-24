@@ -11,6 +11,16 @@
 struct XYPoint{
   double x;
   double y;
+
+  // Constructor, setting points to 0
+  XYPoint() {
+    x = 0; y = 0;
+  }
+
+  // Constructor with two values given
+  XYPoint(double xg, double yg) {
+    x = xg; y = yg;
+  }
 };
 
 class MapState {

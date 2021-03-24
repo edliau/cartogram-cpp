@@ -19,5 +19,12 @@ struct intersection {
 };
 
 void fill_with_density(MapState*);
+bool line_y_intersects(XYPoint,
+                       XYPoint,
+                       double,
+                       intersection *,
+                       double,
+                       double);
+XYPoint point_on_surface(Polygon_with_holes);
 
 #endif
