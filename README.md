@@ -173,7 +173,7 @@ root@<number>:/home/json-develop# make install
     $ docker cp fftw-3.3.9.tar ubuntu-cartogram_cpp:/home/fftw-3.3.9.tar
     ```
 
-13. To unarchive and install the fftw3 library, go back to your Ubuntu container terminal window and run the following commands.
+15. To unarchive and install the fftw3 library, go back to your Ubuntu container terminal window and run the following commands.
 ```
 root@<number>:/# cd /home/
 root@<number>:/home# tar -xf fftw-3.3.9.tar
@@ -184,7 +184,7 @@ root@<number>:/home/fftw-3.3.9# make
 root@<number>:/home/fftw-3.3.9# sudo make install
 ```
 
-15. In your Ubuntu container, follow the instructions [here](https://docs.github.com/en/github/getting-started-with-github/set-up-git) to set up Git and the Linux instructions [here](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh) to connect to GitHub with SSH. Alternatively, you may use the following steps (though still referencing this GitHub guide).
+16. In your Ubuntu container, follow the instructions [here](https://docs.github.com/en/github/getting-started-with-github/set-up-git) to set up Git and the Linux instructions [here](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh) to connect to GitHub with SSH. Alternatively, you may use the following steps (though still referencing this GitHub guide).
 
     1. Set up Git. (Git was already installed in step 11)
     ```
@@ -210,7 +210,7 @@ root@<number>:/home/fftw-3.3.9# sudo make install
         2. Exit Vim by typing `esc`, `:q` and enter.
         3. Create a new SSH key on GitHub and paste the contents into the 'key' section.
 
-19. Clone the `cartogram_cpp` repository and begin developing in Vim as per normal.
+17. Clone the `cartogram_cpp` repository and begin developing in Vim as per normal.
 ```
 root@<number>:/home# git clone git@github.com:mgastner/cartogram_cpp.git
 root@<number>:/home# cd cartogram_cpp/build
