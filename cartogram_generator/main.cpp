@@ -15,6 +15,8 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 
+#include "geojson_to_csv.cpp"
+
 // Functions that are called if the corresponding command-line options are
 // present
 void on_geometry(const std::string geometry_file_name)
@@ -112,6 +114,10 @@ int main(const int argc, const char *argv[])
 
   // Read visual variables (e.g. area, color) from CSV
   read_csv(vm, &map_state);
+
+  geojson_to_csv(geo_file_name);
+
+  return 0;
 
   // Read geometry
   try {
