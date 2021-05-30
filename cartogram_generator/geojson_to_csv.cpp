@@ -9,11 +9,11 @@
 
 void print_properties_map(std::map<std::string, std::vector<std::string>> properties_map) {
   int i = 0;
-  for (auto [key, value_arr] : properties_map) {
+  for (auto [key, value_vec] : properties_map) {
     i++;
     std::cout << i << ". " << key << ": ";
-    for (std::string value : value_arr) {
-      std::cout << ", " << value;
+    for (std::string value : value_vec) {
+      std::cout << value << ", ";
     }
     std::cout << std::endl;
   }
@@ -66,10 +66,21 @@ void geojson_to_csv(const std::string geometry_file_name)
   std::cout << std::endl;
 
   // Get user input
-  std::cout << "Please enter here: ";
-  int number;
-  std::cin >> number; 
+  std::cout << "Please enter your number here: ";
+  int chosen_number;
+  std::cin >> chosen_number; 
   std::cout << std::endl;
-  std::cout << "You entered: " << number << std::endl;
-  std::cout << std::endl;
+
+  // Declare chosen identifier
+  std::map<std::string, std::vector<std::string>> chosen_identifier;
+  int i = 0;
+  for (auto [key, value_vec] : properties_map) {
+    i++;
+    if (chosen_number == i) {
+      chosen_identifier[key] = value_vec;
+        break;
+    }
+  }
+
+  print_properties_map(chosen_identifier);
 }
