@@ -16,6 +16,7 @@ void print_properties_map(std::map<std::string, std::vector<std::string>> proper
       std::cout << value << ", ";
     }
     std::cout << std::endl;
+    std::cout << std::endl;
   }
 }
 
@@ -37,8 +38,9 @@ void geojson_to_csv(const std::string geometry_file_name)
       auto key = property_item.key();
       auto value = property_item.value();
       auto v = properties_map[key];
+      
       // If the value == ""
-      if (property_item.value() == "") {
+      if (value == "" || value.is_null()) {
         continue;
         // If the map does not contain the key
       } else if (properties_map.count(key) == 0) {
@@ -83,4 +85,5 @@ void geojson_to_csv(const std::string geometry_file_name)
   }
 
   print_properties_map(chosen_identifier);
+  std::cout << std::endl;
 }
