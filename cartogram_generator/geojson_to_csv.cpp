@@ -39,7 +39,7 @@ void geojson_to_csv(const std::string geometry_file_name)
       auto key = property_item.key();
       auto value = property_item.value();
       auto v = properties_map[key];
-      
+
       // If the value == ""
       if (value == "" || value.is_null()) {
         continue;
@@ -56,39 +56,40 @@ void geojson_to_csv(const std::string geometry_file_name)
     }
   }
 
+  // Declare map of properties and their values
+  std::map<std::string,
+           std::vector<std::string>> viable_properties_map = properties_map;
+
   for (auto [key, value_arr] : properties_map) {
     if (value_arr.size() < j["features"].size()) {
-      properties_map.erase(key);
+      viable_properties_map.erase(key);
     }
   }
 
   // Display available unique identifiers
-  std::cout << "Here are the available unique identifiers and their values. ";
+  std::cout << "Here are the available unique identifiers and their values. " << std::endl;
   std::cout << "Please select one by entering the respective number." << std::endl;
-  print_properties_map(properties_map);
-  std::cout << std::endl;
+  print_properties_map(viable_properties_map);
+  std::cout << viable_properties_map.size() + 1 << ". All" << std::endl << std::endl;
 
   // Get user input
   std::cout << "Please enter your number here: ";
-  int chosen_number;
+  unsigned long chosen_number;
   std::cin >> chosen_number;
   std::cout << std::endl;
 
   // Declare chosen identifier
   std::map<std::string, std::vector<std::string>> chosen_identifiers;
-  int i = 0;
-  for (auto [key, value_vec] : properties_map) {
+  size_t i = 0;
+  for (auto [key, value_vec] : viable_properties_map) {
     i++;
-    if (chosen_number == i) {
+    if (chosen_number == i || chosen_number == viable_properties_map.size() + 1) {
       chosen_identifiers[key] = value_vec;
-        break;
     }
   }
 
   print_properties_map(chosen_identifiers);
-  std::cout << std::endl;
 
-  /*
   std::ofstream csv;
   csv.open("template_with_identifiers.csv");
   auto csv_writer = csv::make_csv_writer(csv);
@@ -109,5 +110,4 @@ void geojson_to_csv(const std::string geometry_file_name)
   }
 
   csv.close();
-  */
 }
