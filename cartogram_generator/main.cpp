@@ -106,6 +106,8 @@ int main(const int argc, const char *argv[])
     if (vm.count("help") || argc == 1) {
       std::cerr << desc << '\n';
       return EXIT_SUCCESS;
+    } else if (!vm.count("make_csv") && !vm.count("visual_variable_file")) {
+      std::cerr << "Visual variables files required. To make a template csv, use the --make_csv flag!" << '\n';
     } else { // !vm.count("make_csv")
       notify(vm);  // Triggers notifier functions such as on_geometry()
     }
@@ -116,6 +118,7 @@ int main(const int argc, const char *argv[])
 
   if (make_csv) {
     // code
+    geojson_to_csv(geo_file_name);
     return EXIT_SUCCESS;
   }
 
@@ -126,7 +129,6 @@ int main(const int argc, const char *argv[])
   // Read visual variables (e.g. area, color) from CSV
   read_csv(vm, &map_state);
 
-  geojson_to_csv(geo_file_name);
 
   return 0;
 

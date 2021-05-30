@@ -1,6 +1,7 @@
 #include "geo_div.h"
 #include "map_state.h"
 #include <nlohmann/json.hpp>
+#include "csv.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -45,7 +46,7 @@ void geojson_to_csv(const std::string geometry_file_name)
         // If the map does not contain the key
       } else if (properties_map.count(key) == 0) {
         properties_map[key] = {value};
-        // If the value is already inside the vector 
+        // If the value is already inside the vector
       } else if (std::find(v.begin(), v.end(), value) != v.end()) {
         continue;
         // If the map contains the key
@@ -70,20 +71,43 @@ void geojson_to_csv(const std::string geometry_file_name)
   // Get user input
   std::cout << "Please enter your number here: ";
   int chosen_number;
-  std::cin >> chosen_number; 
+  std::cin >> chosen_number;
   std::cout << std::endl;
 
   // Declare chosen identifier
-  std::map<std::string, std::vector<std::string>> chosen_identifier;
+  std::map<std::string, std::vector<std::string>> chosen_identifiers;
   int i = 0;
   for (auto [key, value_vec] : properties_map) {
     i++;
     if (chosen_number == i) {
-      chosen_identifier[key] = value_vec;
+      chosen_identifiers[key] = value_vec;
         break;
     }
   }
 
-  print_properties_map(chosen_identifier);
+  print_properties_map(chosen_identifiers);
   std::cout << std::endl;
+
+  /*
+  std::ofstream csv;
+  csv.open("template_with_identifiers.csv");
+  auto csv_writer = csv::make_csv_writer(csv);
+
+  std::vector<std::vector<std::string>> id_tuples(chosen_identifiers.begin()->second.size() + 1);
+
+  for (auto const& [column_name, ids] : chosen_identifiers)
+  {
+
+    id_tuples[0].push_back(column_name);
+    for (size_t i = 0; i < ids.size(); i++) {
+      id_tuples[i + 1].push_back(ids[i]);
+    }
+  }
+
+  for (auto id_tuple : id_tuples) {
+    csv_writer << id_tuple;
+  }
+
+  csv.close();
+  */
 }
