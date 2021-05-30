@@ -47,7 +47,8 @@ int main(const int argc, const char *argv[])
 
   // Other boolean values that are needed to parse the command line arguments
   bool input_polygons_to_eps,
-       density_to_eps;
+       density_to_eps,
+       make_csv;
 
   // Parse command-line options. See
   // https://theboostcpplibraries.com/boost.program_options
@@ -64,6 +65,10 @@ int main(const int argc, const char *argv[])
       "visual_variable_file,v",
       value<std::string>()->notifier(on_visual_variable_file),
       "CSV file with ID, area, and (optionally) colour"
+      )(
+      "make_csv,m",
+      value<bool>(&make_csv)->default_value(false)->implicit_value(true),
+      "Boolean: create a CSV from the given GeoJSON file?"
       )(
       "id,i",
       value<std::string>(),
@@ -82,7 +87,7 @@ int main(const int argc, const char *argv[])
       "Number of grid cells along longer Cartesian coordinate axis"
       )(
       "world,w",
-      value<bool>(&world)->default_value(false)->implicit_value(false),
+      value<bool>(&world)->default_value(false)->implicit_value(true),
       "Boolean: is input a world map in longitude-latitude format?"
       )(
       "input_polygons_to_eps",
@@ -98,16 +103,22 @@ int main(const int argc, const char *argv[])
       "Boolean: make EPS images input_*.eps?"
       );
     store(parse_command_line(argc, argv, desc), vm);
-    if (vm.count("help") || vm.empty()) {
+    if (vm.count("help") || argc == 1) {
       std::cerr << desc << '\n';
       return EXIT_SUCCESS;
-    } else {
+    } else { // !vm.count("make_csv")
       notify(vm);  // Triggers notifier functions such as on_geometry()
     }
   } catch (const error &ex) {
     std::cerr << "ERROR: " << ex.what() << std::endl;
     return EXIT_FAILURE;
   }
+
+  if (make_csv) {
+    // code
+    return EXIT_SUCCESS;
+  }
+
   MapState map_state(vm["visual_variable_file"].as<std::string>(),
                      world,
                      density_to_eps);
