@@ -45,7 +45,8 @@ int main(const int argc, const char *argv[])
 
   // Other boolean values that are needed to parse the command line arguments
   bool input_polygons_to_eps,
-       density_to_eps;
+       density_to_eps,
+       make_csv;
 
   // Parse command-line options. See
   // https://theboostcpplibraries.com/boost.program_options
@@ -62,6 +63,12 @@ int main(const int argc, const char *argv[])
       "visual_variable_file,v",
       value<std::string>()->notifier(on_visual_variable_file),
       "CSV file with ID, area, and (optionally) colour"
+      )(
+      "make_csv,m",
+      value<bool>(&make_csv)
+      ->default_value(false)
+      ->implicit_value(true),
+      "Boolean: create a CSV template file based on the given GeoJSON file?"
       )(
       "id,i",
       value<std::string>(),
@@ -105,6 +112,10 @@ int main(const int argc, const char *argv[])
   } catch (const error &ex) {
     std::cerr << "ERROR: " << ex.what() << std::endl;
     return EXIT_FAILURE;
+  }
+  if (make_csv) {
+    // code here, call your function here
+    return EXIT_SUCCESS;
   }
   MapState map_state(vm["visual_variable_file"].as<std::string>(),
                      world,
