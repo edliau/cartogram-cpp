@@ -14,6 +14,7 @@
 #include "write_to_json.h"
 #include <boost/program_options.hpp>
 #include <iostream>
+#include "geojson_to_csv.cpp"
 
 // Functions that are called if the corresponding command-line options are
 // present
@@ -115,8 +116,11 @@ int main(const int argc, const char *argv[])
   }
   if (make_csv) {
     // code here, call your function here
+
+    geojson_to_csv(geo_file_name);
     return EXIT_SUCCESS;
   }
+
   MapState map_state(vm["visual_variable_file"].as<std::string>(),
                      world,
                      density_to_eps);
