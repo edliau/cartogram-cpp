@@ -1,5 +1,6 @@
 #include "geo_div.h"
 #include <nlohmann/json.hpp>
+#include "csv.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -85,6 +86,29 @@ void geojson_to_csv(const std::string geometry_file_name)
     }
   }
   print(chosen_identifiers);
+
+  std::ofstream csv;
+  csv.open ("template_from_geojson.csv");
+
+  std::vector<std::vector<std::string>> csv_rows(chosen_identifiers.begin()->second.size() + 1);
+
+  for (auto [column_name, ids] : chosen_identifiers) {
+    csv_rows[0].push_back(column_name);
+    for (size_t k = 0; k < ids.size(); k++) {
+      csv_rows[k + 1].push_back(ids[k]);
+    }
+  }
+
+  auto writer = csv::make_csv_writer(csv);
+  for (auto row : csv_rows) {
+    for (auto item : row ) {
+      std::cout << item << '\n';
+    }
+    std::cout << "\n\n\n";
+    writer << row;
+  }
+
+  csv.close();
 
   return;
 }
