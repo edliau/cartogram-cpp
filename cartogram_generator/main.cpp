@@ -140,98 +140,95 @@ int main(const int argc, const char *argv[])
   // holes[3].push_back(Point(30, 70)); holes[3].push_back(Point(60, 70));
   // holes[3].push_back(Point(60, 40)); holes[3].push_back(Point(30, 40));
 
- Polygon_with_holes sg_mainland(sg_mainland_boundary, holes.begin(), holes.end());
+  Polygon_with_holes sg_mainland(sg_mainland_boundary, holes.begin(), holes.end());
 
- // Creating another polygon with zero holes
+  // Creating another polygon with zero holes
 
- // Empty vector
- std::vector<Polygon> empty_vec(0);
+  // Empty vector
+  std::vector<Polygon> empty_vec(0);
 
- Polygon sentosa_boundary;
- sentosa_boundary.push_back(Point(200, 200)); sentosa_boundary.push_back(Point(150, 200));
- sentosa_boundary.push_back(Point(150, 150)); sentosa_boundary.push_back(Point(200, 150));
+  Polygon sentosa_boundary;
+  sentosa_boundary.push_back(Point(200, 200)); sentosa_boundary.push_back(Point(150, 200));
+  sentosa_boundary.push_back(Point(150, 150)); sentosa_boundary.push_back(Point(200, 150));
 
- Polygon_with_holes sentosa(sentosa_boundary, empty_vec.begin(), empty_vec.end());
+  Polygon_with_holes sentosa(sentosa_boundary, empty_vec.begin(), empty_vec.end());
 
- // Creating a GeoDiv
- GeoDiv gd_sg("Singapore"); // inside the quotes should be the GeoDiv ID
-                            // the GeoDiv ID should be in the CSV and GeoJSON for every feature
+  // Creating a GeoDiv
+  GeoDiv gd_sg("Singapore"); // inside the quotes should be the GeoDiv ID
+                             // the GeoDiv ID should be in the CSV and GeoJSON for every feature
 
- // Putting the above created polygon with three holes into the GeoDiv
- // Remember: GeoDivs can hold multiple polygons with holes
- gd_sg.push_back(sg_mainland);
- gd_sg.push_back(sentosa);
+  // Putting the above created polygon with three holes into the GeoDiv
+  // Remember: GeoDivs can hold multiple polygons with holes
+  gd_sg.push_back(sg_mainland);
+  gd_sg.push_back(sentosa);
 
- Polygon malaysia_boundary;
- malaysia_boundary.push_back(Point(300, 300)); malaysia_boundary.push_back(Point(250, 300));
- malaysia_boundary.push_back(Point(250, 250)); malaysia_boundary.push_back(Point(300, 250));
+  Polygon malaysia_boundary;
+  malaysia_boundary.push_back(Point(300, 300)); malaysia_boundary.push_back(Point(250, 300));
+  malaysia_boundary.push_back(Point(250, 250)); malaysia_boundary.push_back(Point(300, 250));
 
- Polygon_with_holes malaysia_mainland(malaysia_boundary, empty_vec.begin(), empty_vec.end());
+  Polygon_with_holes malaysia_mainland(malaysia_boundary, empty_vec.begin(), empty_vec.end());
 
- // Creating another GeoDiv
- GeoDiv gd_ml("Malaysia");
+  // Creating another GeoDiv
+  GeoDiv gd_ml("Malaysia");
 
- gd_ml.push_back(malaysia_mainland);
+  gd_ml.push_back(malaysia_mainland);
 
- // Adding all GeoDivs to our map
- map_state.push_back(gd_sg);
- map_state.push_back(gd_ml);
+  // Adding all GeoDivs to our map
+  map_state.push_back(gd_sg);
+  map_state.push_back(gd_ml);
 
- // CGAL command to make printing pretty
- CGAL::set_pretty_mode(std::cout);
+  // CGAL command to make printing pretty
+  CGAL::set_pretty_mode(std::cout);
 
- // Iterating through the entire map
- // Iterating over GeoDivs in map_state
- for (GeoDiv gd : map_state.geo_divs()) {
+  // Iterating through the entire map
+  // Iterating over GeoDivs in map_state
+  for (GeoDiv gd : map_state.geo_divs()) {
 
-   std::cout << "GeoDiv ID: " << gd.id() << std::endl << std::endl;
-   // Iterating over points in Polygon_with_holes
-   int i = 0;
-   for (Polygon_with_holes pwh : gd.polygons_with_holes()) {
-     std::cout << "Polygon_with_holes number " << i << ": " << std::endl;
-     i++;
+    std::cout << "GeoDiv ID: " << gd.id() << std::endl << std::endl;
+    // Iterating over points in Polygon_with_holes
+    int i = 0;
+    for (Polygon_with_holes pwh : gd.polygons_with_holes()) {
+      std::cout << "Polygon_with_holes number " << i << ": " << std::endl;
+      i++;
 
-     // To pring a new line
-     std::cout << std::endl;
+      // To pring a new line
+      std::cout << std::endl;
 
-     std::cout << "Outer boundary: "<< std::endl << std::endl;
-     int j = 0;
-     // Iterating over points in exterior boundary
-     for (Point p : pwh.outer_boundary()) {
-       std::cout << "Point number " << j << ": " << std::endl;
-       j++;
-       std::cout << p << std::endl;
+      std::cout << "Outer boundary: "<< std::endl << std::endl;
+      int j = 0;
+      // Iterating over points in exterior boundary
+      for (Point p : pwh.outer_boundary()) {
+        std::cout << "Point number " << j << ": " << std::endl;
+        j++;
+        std::cout << p << std::endl;
 
-     }
-     std::cout << std::endl;
+      }
+      std::cout << std::endl;
 
-     std::cout << "Holes: "<< std::endl << std::endl;
-     int k = 0;
-     // Iterating over holes
-     for (auto hci = pwh.holes_begin(); hci != pwh.holes_end(); ++hci) {
-       std::cout << "Hole number " << k << ": "<< std::endl << std::endl;
-       k++;
+      std::cout << "Holes: "<< std::endl << std::endl;
+      int k = 0;
+      // Iterating over holes
+      for (auto hci = pwh.holes_begin(); hci != pwh.holes_end(); ++hci) {
+        std::cout << "Hole number " << k << ": "<< std::endl << std::endl;
+        k++;
 
-       Polygon hole = *hci;
+        Polygon hole = *hci;
 
-       int l = 0;
-       // Iterating over points in hole
-       for (Point p : hole) {
+        int l = 0;
+        // Iterating over points in hole
+        for (Point p : hole) {
 
-         std::cout << "Point number " << l << ": " << std::endl;
-         l++;
-         std::cout << p << std::endl;
-       }
-       std::cout << std::endl;
+          std::cout << "Point number " << l << ": " << std::endl;
+          l++;
+          std::cout << p << std::endl;
+        }
+        std::cout << std::endl;
 
-     }
+      }
 
-     std::cout << std::endl << std::endl;
-   }
- }
-
- std::cout << "Printing map" << std::endl;
- write_map_to_eps("sg_ml.eps", &map_state);
+      std::cout << std::endl << std::endl;
+    }
+  }
 
   return EXIT_SUCCESS;
 
