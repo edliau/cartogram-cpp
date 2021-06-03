@@ -4,7 +4,7 @@
 
 void write_eps_header_and_definitions(std::ofstream &eps_file,
                                       std::string eps_name,
-                                      MapState *map_state)
+                                      Cartogram *map_state)
 {
   // Current time
   time_t tt;
@@ -53,7 +53,7 @@ void write_eps_header_and_definitions(std::ofstream &eps_file,
 void write_polygons_to_eps(std::ofstream &eps_file,
                            bool fill_polygons,
                            bool colors,
-                           MapState *map_state)
+                           Cartogram *map_state)
 {
   eps_file << 0.001 * std::min(map_state->lx(), map_state->ly()) << " slw\n";
   for (auto gd : map_state->geo_divs()) {
@@ -113,7 +113,7 @@ void write_polygons_to_eps(std::ofstream &eps_file,
   return;
 }
 
-void write_map_to_eps(std::string eps_name, MapState *map_state)
+void write_map_to_eps(std::string eps_name, Cartogram *map_state)
 {
   std::ofstream eps_file(eps_name);
   write_eps_header_and_definitions(eps_file, eps_name, map_state);
@@ -195,7 +195,7 @@ void heatmap_color(double dens,
 
 void write_density_to_eps(std::string eps_name,
                           double *density,
-                          MapState *map_state)
+                          Cartogram *map_state)
 {
   std::ofstream eps_file(eps_name);
   write_eps_header_and_definitions(eps_file, eps_name, map_state);

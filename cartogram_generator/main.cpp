@@ -23,10 +23,10 @@ void on_geometry(const std::string geometry_file_name)
   return;
 }
 
-void on_visual_variable_file(const std::string geometry_file_name)
+void on_visual_variable_file(const std::string visual_file_name)
 {
   std::cerr << "Using visual variables from file "
-            << geometry_file_name
+            << visual_file_name
             << std::endl;
   return;
 }
@@ -110,9 +110,9 @@ int main(const int argc, const char *argv[])
     std::cerr << "ERROR: " << ex.what() << std::endl;
     return EXIT_FAILURE;
   }
-  MapState map_state(vm["visual_variable_file"].as<std::string>(),
-                     world,
-                     density_to_eps);
+  Cartogram total_cartogram(vm["visual_variable_file"].as<std::string>(),
+            world,
+            density_to_eps);
 
   // Read visual variables (e.g. area, color) from CSV
   read_csv(vm, &map_state);

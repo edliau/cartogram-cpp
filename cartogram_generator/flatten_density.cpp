@@ -33,7 +33,7 @@ void calculate_velocity(double t,
 
 // Function to integrate the equations of motion with the fast flow-based
 // method.
-void flatten_density(MapState *map_state)
+void flatten_density(Cartogram *map_state)
 {
   const unsigned int lx = map_state->lx();
   const unsigned int ly = map_state->ly();

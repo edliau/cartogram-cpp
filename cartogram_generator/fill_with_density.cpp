@@ -31,7 +31,7 @@ bool ray_y_intersects(XYPoint a,
   return false;
 }
 
-void fill_with_density(MapState* map_state)
+void fill_with_density(Cartogram* map_state)
 {
 
   // Calculate the total current area and total target area, excluding any

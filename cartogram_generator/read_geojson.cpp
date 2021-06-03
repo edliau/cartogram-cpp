@@ -129,7 +129,7 @@ GeoDiv json_to_cgal(const std::string id,
   return gd;
 }
 
-void read_geojson(const std::string geometry_file_name, MapState *map_state)
+void read_geojson(const std::string geometry_file_name, Cartogram *map_state)
 {
   bool is_polygon;
   bool polygon_warning_has_been_issued = false;

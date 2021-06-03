@@ -1,7 +1,6 @@
 #include "map_state.h"
 
-InsetState::InsetState(const bool wd2eps) :
-  write_density_to_eps_(wd2eps)
+InsetState::InsetState() :
 {
   n_finished_integrations_ = 0;
   fwd_plan_for_rho_ = NULL;
@@ -39,81 +38,6 @@ void InsetState::set_geo_divs(std::vector<GeoDiv> geo_divs_new)
 {
   geo_divs_.clear();
   geo_divs_ = geo_divs_new;
-}
-
-void InsetState::target_areas_insert(const std::string id, const double area)
-{
-  target_areas.insert(std::pair<std::string, double>(id, area));
-  return;
-}
-
-void InsetState::colors_insert(const std::string id, std::string color)
-{
-
-  // From https://stackoverflow.com/questions/313970/how-to-convert-stdstring-
-  // to-lower-case
-  std::transform(color.begin(), color.end(), color.begin(), ::tolower);
-  Color c(color);
-  colors.insert(std::pair<std::string, Color>(id, c));
-  return;
-}
-
-double InsetState::target_areas_at(const std::string id)
-{
-  return target_areas.at(id);
-}
-
-bool InsetState::target_area_is_missing(const std::string id) const
-{
-
-  // We use negative area as indication that GeoDiv has no target area
-  return target_areas.at(id) < 0.0;
-}
-
-const Color InsetState::colors_at(const std::string id)
-{
-  return colors.at(id);
-}
-
-bool InsetState::colors_empty() const
-{
-  return colors.empty();
-}
-
-void InsetState::set_id_header(const std::string id)
-{
-  id_header_ = id;
-  return;
-}
-
-const std::string InsetState::id_header() const
-{
-  return id_header_;
-}
-
-const std::string InsetState::visual_variable_file() const
-{
-  return visual_variable_file_;
-}
-
-void InsetState::insert_id_in_visual_variables_file(const std::string id)
-{
-  ids_in_visual_variables_file_.insert(id);
-}
-
-const std::set<std::string> InsetState::ids_in_visual_variables_file() const
-{
-  return ids_in_visual_variables_file_;
-}
-
-bool InsetState::is_world_map() const
-{
-  return is_world_map_;
-}
-
-bool InsetState::trigger_write_density_to_eps() const
-{
-  return write_density_to_eps_;
 }
 
 void InsetState::make_grid(const unsigned int x, const unsigned int y)
@@ -260,28 +184,95 @@ double InsetState::max_area_err()
   return mae;
 }
 
-MapState::MapState(std::string v, const bool w, const bool wd2eps) :
+Cartogram::Cartogram(std::string v, const bool w, const bool wd2eps) :
   visual_variable_file_(v),
   is_world_map_(w),
   write_density_to_eps_(wd2eps)
 {
-  n_finished_integrations_ = 0;
-  fwd_plan_for_rho_ = NULL;
-  bwd_plan_for_rho_ = NULL;
   return;
 }
 
-bool MapState::trigger_write_density_to_eps() const
+bool Cartogram::trigger_write_density_to_eps() const
 {
   return write_density_to_eps_;
 }
 
-unsigned int MapState::n_inset_states() const
+unsigned int Cartogram::n_inset_states() const
 {
   return inset_states_.size();
 }
 
-const std::vector<GeoDiv> MapState::inset_states() const
+const std::vector<GeoDiv> Cartogram::inset_states() const
 {
   return inset_states_;
+}
+
+void Cartogram::target_areas_insert(const std::string id, const double area)
+{
+  target_areas.insert(std::pair<std::string, double>(id, area));
+  return;
+}
+
+void Cartogram::colors_insert(const std::string id, std::string color)
+{
+
+  // From https://stackoverflow.com/questions/313970/how-to-convert-stdstring-
+  // to-lower-case
+  std::transform(color.begin(), color.end(), color.begin(), ::tolower);
+  Color c(color);
+  colors.insert(std::pair<std::string, Color>(id, c));
+  return;
+}
+
+double Cartogram::target_areas_at(const std::string id)
+{
+  return target_areas.at(id);
+}
+
+bool Cartogram::target_area_is_missing(const std::string id) const
+{
+
+  // We use negative area as indication that GeoDiv has no target area
+  return target_areas.at(id) < 0.0;
+}
+
+const Color Cartogram::colors_at(const std::string id)
+{
+  return colors.at(id);
+}
+
+bool Cartogram::colors_empty() const
+{
+  return colors.empty();
+}
+
+void Cartogram::set_id_header(const std::string id)
+{
+  id_header_ = id;
+  return;
+}
+
+const std::string Cartogram::id_header() const
+{
+  return id_header_;
+}
+
+const std::string Cartogram::visual_variable_file() const
+{
+  return visual_variable_file_;
+}
+
+void Cartogram::insert_id_in_visual_variables_file(const std::string id)
+{
+  ids_in_visual_variables_file_.insert(id);
+}
+
+const std::set<std::string> Cartogram::ids_in_visual_variables_file() const
+{
+  return ids_in_visual_variables_file_;
+}
+
+bool Cartogram::is_world_map() const
+{
+  return is_world_map_;
 }

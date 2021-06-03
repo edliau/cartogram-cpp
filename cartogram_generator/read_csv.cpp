@@ -4,7 +4,7 @@
 #include <iostream>
 
 void read_csv(const boost::program_options::variables_map vm,
-              MapState *map_state)
+              Cartogram *map_state)
 {
   // Get name of CSV file from vm
   std::string csv_name;

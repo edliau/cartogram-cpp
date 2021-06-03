@@ -5,7 +5,7 @@
 
 #include "project.h"
 
-void project(MapState *map_state)
+void project(Cartogram *map_state)
 {
   const unsigned int lx = map_state->lx();
   const unsigned int ly = map_state->ly();

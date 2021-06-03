@@ -1,7 +1,7 @@
 #include "constants.h"
 #include "map_state.h"
 
-void rescale_map(int long_grid_side_length, MapState *map_state)
+void rescale_map(int long_grid_side_length, Cartogram *map_state)
 {
   double padding = (map_state->is_world_map() ?  1.0 : padding_unless_world);
 
@@ -89,7 +89,7 @@ void rescale_map(int long_grid_side_length, MapState *map_state)
   return;
 }
 
-void unscale_map(MapState *map_state)
+void unscale_map(Cartogram *map_state)
 {
 
   // Rescale all GeoDiv coordinates

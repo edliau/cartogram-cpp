@@ -3,7 +3,7 @@
 #include "write_eps.h"
 #include <iostream>
 
-void blur_density(const double blur_width, MapState *map_state)
+void blur_density(const double blur_width, Cartogram *map_state)
 {
   const unsigned int lx = map_state->lx();
   const unsigned int ly = map_state->ly();

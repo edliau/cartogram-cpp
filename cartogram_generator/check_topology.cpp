@@ -2,7 +2,7 @@
 #include <CGAL/Boolean_set_operations_2.h>
 
 // Returns error if there are holes not inside their respective polygons
-void holes_inside_polygons(MapState *map_state)
+void holes_inside_polygons(Cartogram *map_state)
 {
   for (auto gd : map_state->geo_divs()) {
     for (auto pwh : gd.polygons_with_holes()) {
