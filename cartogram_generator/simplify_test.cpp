@@ -18,47 +18,36 @@ void print_coords(Polyline polyline) {
   std::cout << "Simplified coordinates:" << std::endl << std::endl;
 
   // Print out the simplified coordinates
+  unsigned int i = 0;
   for (Point coord : polyline) {
     std::cout << "[ ";
-    std::cout << std::fixed << coord.x() / 10000;
+    std::cout << coord.x();
     std::cout << ", ";
-    std::cout << std::fixed << coord.y() / 10000;
+    std::cout << coord.y();
     std::cout << " ]";
-    std::cout << ",";
+    if (i != polyline.size() - 1) std::cout << ",";
+    i++;
   }
-
-  // Repeat the first coordinate as per the GeoJSON specifications
-  std::cout << "[ ";
-  std::cout << std::fixed << polyline[0].x() / 10000;
-  std::cout << ", ";
-  std::cout << std::fixed << polyline[0].y() / 10000;
-  std::cout << " ]";
   std::cout << std::endl << std::endl;
 }
 
 void simplify_test() {
   // Hard code a minimum working example where running PS::simplify results in
-  // self-intersections
-  std::vector<std::vector<double>> coords = {
-      {122594.84, 2947155.34},
-      {122291.65, 2947226.15},
-      // commenting out the line below results in no intersections
-      {122231.38, 2947042.48},
-      {122288.90, 2947133.50},
-      {122399.96, 2947130.21},
-      {122397.21, 2947037.56},
-      {122200.50, 2946951.09},
-      {121955.42, 2947081.58},
-      {122049.32, 2947449.07},
-      {122795.19, 2947365.13},
-      {122791.54, 2947241.81},
-      {122594.84, 2947155.34}};
+  // self-intersections. There are no self-intersections when {27, 9} is
+  // omitted.
+  std::vector<std::vector<int>> coords = {
+      {64, 20}, {33, 27}, {27, 9}, {33, 18}, {44, 18}, {44, 8},
+      {24, 0},  {0, 13},  {9, 49}, {84, 41}, {83, 29}, {64, 20},
+  };
+  // Simplification outputs:
+  // [ 64, 20 ],[ 27, 9 ],[ 44, 18 ],[ 24, 0 ],
+  // [ 9, 49 ],[ 83, 29 ],[ 64, 20 ],[ 64, 20 ]
 
   // Create polyline for simplifying later
   Polyline polyline;
 
   // Insert coordinates into polyline
-  for (std::vector<double> coord : coords) {
+  for (std::vector<int> coord : coords) {
     Point pt(coord[0], coord[1]);
     polyline.push_back(pt);
   }
@@ -69,12 +58,12 @@ void simplify_test() {
   PS::simplify(ct, Cost(), Stop(0.2));
   Polyline polyline_simplified;
 
-  // Insert simplified coordinates into polyline for easy handling
+  // Transfer simplified coordinates from ct to polyline for easy handling
   auto cit = ct.constraints_begin();
   for (auto vit = ct.points_in_constraint_begin(*cit);
        vit != ct.points_in_constraint_end(*cit); vit++) {
     polyline_simplified.push_back(*vit);
   }
 
-  print_coords(polyline);
+  print_coords(polyline_simplified);
 }
