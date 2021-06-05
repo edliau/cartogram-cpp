@@ -15,43 +15,44 @@ typedef PS::Squared_distance_cost Cost;
 
 void print_coords(Polyline polyline) {
   std::cout << std::endl;
+  std::cout << "Simplified coordinates:" << std::endl << std::endl;
 
   // Print out the simplified coordinates
   for (Point coord : polyline) {
     std::cout << "[ ";
-    std::cout << std::fixed << coord.x();
+    std::cout << std::fixed << coord.x() / 10000;
     std::cout << ", ";
-    std::cout << std::fixed << coord.y();
+    std::cout << std::fixed << coord.y() / 10000;
     std::cout << " ]";
     std::cout << ",";
   }
 
   // Repeat the first coordinate as per the GeoJSON specifications
   std::cout << "[ ";
-  std::cout << std::fixed << polyline[0].x();
+  std::cout << std::fixed << polyline[0].x() / 10000;
   std::cout << ", ";
-  std::cout << std::fixed << polyline[0].y();
+  std::cout << std::fixed << polyline[0].y() / 10000;
   std::cout << " ]";
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 }
 
 void simplify_test() {
   // Hard code a minimum working example where running PS::simplify results in
   // self-intersections
   std::vector<std::vector<double>> coords = {
-      {122594.842416608473286, 2947155.341584724839777},
-      {122291.654872600804083, 2947226.153077695984393},
+      {122594.84, 2947155.34},
+      {122291.65, 2947226.15},
       // commenting out the line below results in no intersections
-      {122231.389713566517457, 2947042.483519087545574},
-      {122288.905913269147277, 2947133.505765041336417},
-      {122399.960992575390264, 2947130.211158112622797},
-      {122397.212925524567254, 2947037.563923422247171},
-      {122200.508536974317394, 2946951.094404897652566},
-      {121955.427253245317843, 2947081.585233204998076},
-      {122049.323379306704737, 2947449.078677589073777},
-      {122795.194644965638872, 2947365.134323424659669},
-      {122791.540339241153561, 2947241.816514134872705},
-      {122594.842416608473286, 2947155.341584724839777}};
+      {122231.38, 2947042.48},
+      {122288.90, 2947133.50},
+      {122399.96, 2947130.21},
+      {122397.21, 2947037.56},
+      {122200.50, 2946951.09},
+      {121955.42, 2947081.58},
+      {122049.32, 2947449.07},
+      {122795.19, 2947365.13},
+      {122791.54, 2947241.81},
+      {122594.84, 2947155.34}};
 
   // Create polyline for simplifying later
   Polyline polyline;
@@ -75,5 +76,5 @@ void simplify_test() {
     polyline_simplified.push_back(*vit);
   }
 
-  print_coords(polyline_simplified);
+  print_coords(polyline);
 }
