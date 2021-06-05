@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "simplify_map.h"
+#include "simplify_test.cpp"
 
 // Functions that are called if the corresponding command-line options are
 // present
@@ -142,7 +143,8 @@ int main(const int argc, const char *argv[])
     write_map_to_eps("input_polygons.eps", &map_state);
   }
 
-  simplify_map(&map_state);
+  simplify_test();
+  // simplify_map(&map_state);
   
   /*
   // Start map integration
