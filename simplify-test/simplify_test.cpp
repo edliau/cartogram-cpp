@@ -1,6 +1,21 @@
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyline_simplification_2/simplify.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Point_2<K> Point;
+typedef std::vector<Point> Polyline;
+namespace PS = CGAL::Polyline_simplification_2;
+typedef PS::Vertex_base_2<K> Vb;
+typedef CGAL::Constrained_triangulation_face_base_2<K> Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb, Fb> TDS;
+typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, CGAL::Exact_predicates_tag> CDT;
+typedef CGAL::Constrained_triangulation_plus_2<CDT> CT;
+typedef PS::Stop_below_count_ratio_threshold Stop;
+typedef PS::Squared_distance_cost Cost;
 
 void print_coords(Polyline polyline) {
   std::cout << std::endl;
@@ -55,4 +70,8 @@ void simplify_test() {
   }
 
   print_coords(polyline_simplified);
+}
+
+int main() {
+  simplify_test();
 }
