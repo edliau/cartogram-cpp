@@ -55,6 +55,9 @@ void read_csv(const boost::program_options::variables_map vm,
     color_col = reader.index_of("Colour");
   }
 
+  // To associate GeoDivs with csv row numbers
+  int row_num = 1;
+
   // Reading CSV
   for (auto &row : reader) {
     if (row.size() < 2) {
@@ -110,6 +113,9 @@ void read_csv(const boost::program_options::variables_map vm,
     // Associating GeoDiv ID with Inset Positon
     cart_info->gd_to_inset_insert(id, inset_pos);
 
+    // Associating GeoDiv ID with CSV row number
+     cart_info->csv_row_to_gd_insert(std::to_string(row_num), id);
+
     // Checking whether inset_state for inset_pos already exists
     bool found = false;
     for (auto &inset_state : *cart_info->ref_to_inset_states()) {
@@ -129,6 +135,7 @@ void read_csv(const boost::program_options::variables_map vm,
       }
       cart_info->push_back(inset_state);
     }
+    row_num++;
   }
   return;
 }

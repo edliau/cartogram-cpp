@@ -8,6 +8,7 @@ class CartogramInfo {
 private:
   std::vector<InsetState> inset_states_;
   std::map<std::string, std::string> gd_to_inset_;
+  std::map<std::string, std::string> csv_row_to_gd_;
   std::string id_header_;
   std::string visual_variable_file_;
   std::set<std::string> ids_in_visual_variables_file_;
@@ -28,7 +29,9 @@ public:
   const std::vector<InsetState> inset_states() const;
   std::vector<InsetState> *ref_to_inset_states();
   void push_back(const InsetState);
-  void gd_to_inset_insert(std::string, std::string);
-  const std::string inset_at_gd(const std::string);
+  void gd_to_inset_insert(const std::string, const std::string);
+  const std::string inset_at_gd(const std::string) const;
+  void csv_row_to_gd_insert(const std::string, const std::string);
+  const std::string gd_at_csv_row(std::string) const;
 };
 #endif

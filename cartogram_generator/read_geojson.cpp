@@ -185,6 +185,35 @@ void read_geojson(const std::string geometry_file_name,
   check_geojson_validity(j);
   std::set<std::string> ids_in_geojson;
 
+  // Vector storing all possible id headers
+  std::vector<std::string> possible_keys_for_id;
+
+  // Adding all possible keys
+  nlohmann::json first_properties = j["features"][0]["properties"];
+  for (auto j_key : first_properties.items()) {
+
+    // Handling strings, and numbers as key
+    std::string key = j_key.key();
+    if (key.front() == '"') {
+      std::cout << "KEY PREFIXED AND POSTFIXED WITH \"" << std::endl;
+      key = key.substr(1, key.length() - 2);
+    }
+
+    // Adding key to vector of all possible keys
+    possible_keys_for_id.push_back(key);
+  }
+
+  std::string key_for_id = cart_info->id_header();
+
+  // Checking whether "cartogram_id" found
+  if (std::find(possible_keys_for_id.begin(),
+                possible_keys_for_id.end(),
+                "cartogram_id") != possible_keys_for_id.end()) {
+
+    // Dealing with old C data
+    key_for_id = "cartogram_id";
+  }
+
   // Iterate through each inset
   for (auto &inset_state : *cart_info->ref_to_inset_states()) {
     for (auto feature : j["features"]) {
@@ -199,10 +228,10 @@ void read_geojson(const std::string geometry_file_name,
 
         // Storing ID from properties
         const nlohmann::json properties = feature["properties"];
-        if (!properties.contains(cart_info->id_header()) &&
-            cart_info->id_header() != "") { // Visual file not provided
+        if (!properties.contains(key_for_id) &&
+            key_for_id != "") { // Visual file not provided
           std::cerr << "ERROR: In GeoJSON, there is no property "
-                    << cart_info->id_header()
+                    << key_for_id
                     << " in feature." << std::endl;
           std::cerr << "Available properties are: "
                     << properties
@@ -212,7 +241,7 @@ void read_geojson(const std::string geometry_file_name,
 
         // Use dump() instead of get() so that we can handle string and numeric
         // IDs in GeoJSON. Both types of IDs are converted to C++ strings.
-        std::string id = properties[cart_info->id_header()].dump();
+        std::string id = properties[key_for_id].dump();
 
         // We only need to check whether the front of the string is '"' because
         // dump automatically prefixes and postfixes a '"' to any non-NULL string
@@ -220,6 +249,13 @@ void read_geojson(const std::string geometry_file_name,
         if (id.front() == '"') {
           id = id.substr(1, id.length() - 2);
         }
+
+        // Handling old C data
+        if (key_for_id == "cartogram_id") {
+          id = cart_info->gd_at_csv_row(id);
+        }
+
+        // Checking whether ID repeated in GeoJSON
         if (inset_state.pos() == cart_info->inset_at_gd(id)) {
           if (ids_in_geojson.contains(id)) {
             std::cerr << "ERROR: ID "
