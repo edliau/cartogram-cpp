@@ -124,8 +124,8 @@ int main(const int argc, const char *argv[])
   }
 
   CartogramInfo cart_info(visual_file_name,
-                         world,
-                         density_to_eps);
+                          world,
+                          density_to_eps);
 
   // std::cout << "Initialised CartogramInfo object" << std::endl;
   std::cout << std::endl;

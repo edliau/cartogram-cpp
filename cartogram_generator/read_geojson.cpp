@@ -174,7 +174,6 @@ void read_geojson(const std::string geometry_file_name,
                   bool make_csv)
 {
   bool is_polygon;
-  bool polygon_warning_has_been_issued = false;
 
   // Open file
   std::ifstream in_file(geometry_file_name);
@@ -199,21 +198,50 @@ void read_geojson(const std::string geometry_file_name,
   std::cout << "Checked GeoJSON validity." << std::endl;
   std::set<std::string> ids_in_geojson;
 
-  // Iterate through each inset
-  for (auto &inset_state : *cart_info->ref_to_inset_states()) {
-    for (auto feature : j["features"]) {
-      const nlohmann::json geometry = feature["geometry"];
-      is_polygon = (geometry["type"] == "Polygon");
-      if (is_polygon && !polygon_warning_has_been_issued) {
-        std::cout << "Warning: support for Polygon geometry experimental, "
-                  << "for best results use MultiPolygon" << "\n";
-        polygon_warning_has_been_issued = true;
-      }
-      if (!make_csv) {
+
+  // Checking whether Polygon geometry
+  nlohmann::json first_feature = j["features"][0];
+  is_polygon = (first_feature["geometry"]["type"] == "Polygon");
+  if (is_polygon) {
+    std::cout << "Warning: support for Polygon geometry experimental, "
+              << "for best results use MultiPolygon" << "\n";
+  }
+
+  // Vector storing all possible id headers
+  std::vector<std::string> possible_keys_for_id;
+
+  // Adding all possible keys
+  nlohmann::json first_properties = first_feature["properties"];
+  for (auto j_key : first_properties.items()) {
+
+    // Handling strings, and numbers as key
+    std::string key = j_key.key();
+
+    // Adding key to vector of all possible keys
+    possible_keys_for_id.push_back(key);
+  }
+
+  std::string key_for_id = cart_info->id_header();
+
+  // Checking whether "cartogram_id" found
+  if (std::find(possible_keys_for_id.begin(),
+                possible_keys_for_id.end(),
+                "cartogram_id") != possible_keys_for_id.end()) {
+
+    // Dealing with old C data
+    key_for_id = "cartogram_id";
+  }
+
+  if (!make_csv) {
+
+    // Iterate through each inset
+    for (auto &inset_state : *cart_info->ref_to_inset_states()) {
+      for (auto feature : j["features"]) {
+        const nlohmann::json geometry = feature["geometry"];
 
         // Storing ID from properties
         const nlohmann::json properties = feature["properties"];
-        if (!properties.contains(cart_info->id_header()) &&
+        if (!properties.contains(key_for_id) &&
             cart_info->id_header() != "") { // Visual file not provided
           // std::cout << std::endl
                     // << "ERROR: In GeoJSON, there is no property "
@@ -231,7 +259,7 @@ void read_geojson(const std::string geometry_file_name,
 
         // Use dump() instead of get() so that we can handle string and numeric
         // IDs in GeoJSON. Both types of IDs are converted to C++ strings.
-        std::string id = properties[cart_info->id_header()].dump();
+        std::string id = properties[key_for_id].dump();
 
         // We only need to check whether the front of the string is '"' because
         // dump automatically prefixes and postfixes a '"' to any non-NULL string
@@ -239,6 +267,13 @@ void read_geojson(const std::string geometry_file_name,
         if (id.front() == '"') {
           id = id.substr(1, id.length() - 2);
         }
+
+        // Handling old C data
+        if (key_for_id == "cartogram_id") {
+          id = cart_info->gd_at_csv_row(id);
+        }
+
+        // Checking whether ID repeated in GeoJSON
         if (inset_state.pos() == cart_info->inset_at_gd(id)) {
           if (ids_in_geojson.contains(id)) {
             std::cout << std::endl
@@ -259,10 +294,7 @@ void read_geojson(const std::string geometry_file_name,
         }
       }
     }
-  }
-
-  // Creating a CSV from the given GeoJSON file
-  if (make_csv) {
+  } else { // Creating a CSV from the given GeoJSON file
 
     // Declare map for key-value pairs
     std::map<std::string, std::vector<std::string>> properties_map;

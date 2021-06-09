@@ -70,13 +70,14 @@ void CartogramInfo::push_back(const InsetState is)
   return;
 }
 
-void CartogramInfo::gd_to_inset_insert(const std::string id, std::string inset)
+void CartogramInfo::gd_to_inset_insert(const std::string id,
+                                       const std::string inset)
 {
   gd_to_inset_.insert(std::pair<std::string, std::string>(id, inset));
   return;
 }
 
-const std::string CartogramInfo::inset_at_gd(const std::string id)
+const std::string CartogramInfo::inset_at_gd(const std::string id) const
 {
   if (gd_to_inset_.count(id)) {
     return gd_to_inset_.at(id);
@@ -84,3 +85,15 @@ const std::string CartogramInfo::inset_at_gd(const std::string id)
   std::cout << "No GeoDiv: " << id << std::endl;
   return "null";
 }
+
+ void CartogramInfo::csv_row_to_gd_insert(const std::string csv_row,
+                                          const std::string id)
+ {
+   csv_row_to_gd_.insert(std::pair<std::string, std::string>(csv_row, id));
+   return;
+ }
+
+ const std::string CartogramInfo::gd_at_csv_row(std::string csv_row) const
+ {
+   return csv_row_to_gd_.at(csv_row);
+ }
