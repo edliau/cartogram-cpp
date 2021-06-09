@@ -78,5 +78,9 @@ void CartogramInfo::gd_to_inset_insert(const std::string id, std::string inset)
 
 const std::string CartogramInfo::inset_at_gd(const std::string id)
 {
-  return gd_to_inset_.at(id);
+  if (gd_to_inset_.count(id)) {
+    return gd_to_inset_.at(id);
+  }
+  std::cout << "No GeoDiv: " << id << std::endl;
+  return "null";
 }

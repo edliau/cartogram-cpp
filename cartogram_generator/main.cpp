@@ -15,6 +15,7 @@
 #include "write_to_json.h"
 #include <boost/program_options.hpp>
 #include <iostream>
+#include <boost/exception/diagnostic_information.hpp>
 
 // Functions that are called if the corresponding command-line options are
 // present
@@ -140,6 +141,8 @@ int main(const int argc, const char *argv[])
       //           << std::endl;
       // return EXIT_FAILURE;
       std::cout << std::endl;
+      std::cout << boost::current_exception_diagnostic_information();
+      std::cout << std::endl;
       std::cout << "Unable to read CSV file." << std::endl;
       std::cout << "=== FAILED ===" << std::endl;
       _Exit(1);
@@ -169,6 +172,8 @@ int main(const int argc, const char *argv[])
     //           << std::endl;
     // return EXIT_FAILURE;
     std::cout << std::endl;
+    std::cout << boost::current_exception_diagnostic_information();
+    std::cout << std::endl;
     std::cout << "Unable to read GeoJSON file." << std::endl;
     std::cout << "=== FAILED ===" << std::endl;
     _Exit(1);
@@ -195,6 +200,8 @@ int main(const int argc, const char *argv[])
   } catch (...) {
     std::cout << std::endl;
     std::cout << "Data parsed incorrectly." << std::endl;
+    std::cout << boost::current_exception_diagnostic_information();
+    std::cout << std::endl;
     std::cout << "=== FAILED ===" << std::endl;
     _Exit(1);
   }

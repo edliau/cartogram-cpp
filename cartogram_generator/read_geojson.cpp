@@ -196,6 +196,7 @@ void read_geojson(const std::string geometry_file_name,
     throw std::invalid_argument("error");
   }
   check_geojson_validity(j);
+  std::cout << "Checked GeoJSON validity." << std::endl;
   std::set<std::string> ids_in_geojson;
 
   // Iterate through each inset
