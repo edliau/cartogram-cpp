@@ -162,7 +162,6 @@ void read_geojson(const std::string geometry_file_name,
                   bool make_csv)
 {
   bool is_polygon;
-  bool polygon_warning_has_been_issued = false;
 
   // Open file
   std::ifstream in_file(geometry_file_name);
@@ -185,19 +184,24 @@ void read_geojson(const std::string geometry_file_name,
   check_geojson_validity(j);
   std::set<std::string> ids_in_geojson;
 
+
+  // Checking whether Polygon geometry
+  nlohmann::json first_feature = j["features"][0];
+  is_polygon = (first_feature["geometry"]["type"] == "Polygon");
+  if (is_polygon) {
+    std::cout << "Warning: support for Polygon geometry experimental, "
+              << "for best results use MultiPolygon" << "\n";
+  }
+
   // Vector storing all possible id headers
   std::vector<std::string> possible_keys_for_id;
 
   // Adding all possible keys
-  nlohmann::json first_properties = j["features"][0]["properties"];
+  nlohmann::json first_properties = first_feature["properties"];
   for (auto j_key : first_properties.items()) {
 
     // Handling strings, and numbers as key
     std::string key = j_key.key();
-    if (key.front() == '"') {
-      std::cout << "KEY PREFIXED AND POSTFIXED WITH \"" << std::endl;
-      key = key.substr(1, key.length() - 2);
-    }
 
     // Adding key to vector of all possible keys
     possible_keys_for_id.push_back(key);
@@ -214,17 +218,12 @@ void read_geojson(const std::string geometry_file_name,
     key_for_id = "cartogram_id";
   }
 
-  // Iterate through each inset
-  for (auto &inset_state : *cart_info->ref_to_inset_states()) {
-    for (auto feature : j["features"]) {
-      const nlohmann::json geometry = feature["geometry"];
-      is_polygon = (geometry["type"] == "Polygon");
-      if (is_polygon && !polygon_warning_has_been_issued) {
-        std::cout << "Warning: support for Polygon geometry experimental, "
-                  << "for best results use MultiPolygon" << "\n";
-        polygon_warning_has_been_issued = true;
-      }
-      if (!make_csv) {
+  if (!make_csv) {
+    
+    // Iterate through each inset
+    for (auto &inset_state : *cart_info->ref_to_inset_states()) {
+      for (auto feature : j["features"]) {
+        const nlohmann::json geometry = feature["geometry"];
 
         // Storing ID from properties
         const nlohmann::json properties = feature["properties"];
