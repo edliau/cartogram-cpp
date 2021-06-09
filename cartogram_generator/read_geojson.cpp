@@ -219,7 +219,7 @@ void read_geojson(const std::string geometry_file_name,
   }
 
   if (!make_csv) {
-    
+
     // Iterate through each inset
     for (auto &inset_state : *cart_info->ref_to_inset_states()) {
       for (auto feature : j["features"]) {
@@ -273,10 +273,7 @@ void read_geojson(const std::string geometry_file_name,
         }
       }
     }
-  }
-
-  // Creating a CSV from the given GeoJSON file
-  if (make_csv) {
+  } else { // Creating a CSV from the given GeoJSON file
 
     // Declare map for key-value pairs
     std::map<std::string, std::vector<std::string>> properties_map;
