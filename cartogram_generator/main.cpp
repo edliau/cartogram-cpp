@@ -20,13 +20,13 @@
 // present
 void on_geometry(const std::string geometry_file_name)
 {
-  std::cerr << "Using geometry from file " << geometry_file_name << std::endl;
+  std::cout << "Using geometry from file " << geometry_file_name << std::endl;
   return;
 }
 
 void on_visual_variable_file(const std::string visual_file_name)
 {
-  std::cerr << "Using visual variables from file "
+  std::cout << "Using visual variables from file "
             << visual_file_name
             << std::endl;
   return;
@@ -126,39 +126,55 @@ int main(const int argc, const char *argv[])
                          world,
                          density_to_eps);
 
+  // std::cout << "Initialised CartogramInfo object" << std::endl;
+  std::cout << std::endl;
+
   if (!make_csv) {
 
     // Read visual variables (e.g. area, color) from CSV
     try {
       read_csv(vm, &cart_info);
-    } catch (const std::runtime_error& e) {
-      std::cerr << "ERROR: "
-                << e.what()
-                << std::endl;
-      return EXIT_FAILURE;
-    } catch (const std::system_error& e) {
-      std::cerr << "ERROR: "
-                << e.what()
-                << " ("
-                << e.code()
-                << ")"
-                << std::endl;
-      return EXIT_FAILURE;
+    } catch (...) {
+      // std::cerr << "ERROR: "
+      //           << e.what()
+      //           << std::endl;
+      // return EXIT_FAILURE;
+      std::cout << std::endl;
+      std::cout << "Unable to read CSV file." << std::endl;
+      std::cout << "=== FAILED ===" << std::endl;
+      _Exit(1);
     }
+    // } catch (const std::system_error& e) {
+    //   std::cerr << "ERROR: "
+    //             << e.what()
+    //             << " ("
+    //             << e.code()
+    //             << ")"
+    //             << std::endl;
+    //   return EXIT_FAILURE;
+    // }
   }
+
+  // std::cout << "Read csv." << std::endl;
 
   // Read geometry
   try {
     read_geojson(geo_file_name, &cart_info, make_csv);
-  } catch (const std::system_error& e) {
-    std::cerr << "ERROR: "
-              << e.what()
-              << " ("
-              << e.code()
-              << ")"
-              << std::endl;
-    return EXIT_FAILURE;
+  } catch (...) {
+    // std::cerr << "ERROR: "
+    //           << e.what()
+    //           << " ("
+    //           << e.code()
+    //           << ")"
+    //           << std::endl;
+    // return EXIT_FAILURE;
+    std::cout << std::endl;
+    std::cout << "Unable to read GeoJSON file." << std::endl;
+    std::cout << "=== FAILED ===" << std::endl;
+    _Exit(1);
   }
+
+  // std::cout << "Read GeoJSON." << std::endl;
 
   // Determining name of input map
   std::string map_name = geo_file_name;
@@ -168,6 +184,24 @@ int main(const int argc, const char *argv[])
   if (map_name.find('.') != std::string::npos) {
     map_name = map_name.substr(0, map_name.find('.'));
   }
+
+  try {
+    for (auto &inset_state : *cart_info.ref_to_inset_states()) {
+      for (auto &gd : *inset_state.ref_to_geo_divs()) {
+        std::cout << gd.id() << ": " << inset_state.target_areas_at(gd.id());
+        std::cout << std::endl;
+      }
+    }
+  } catch (...) {
+    std::cout << std::endl;
+    std::cout << "Data parsed incorrectly." << std::endl;
+    std::cout << "=== FAILED ===" << std::endl;
+    _Exit(1);
+  }
+
+  std::cout << std::endl;
+  std::cout << "=== PASSED ===" << std::endl;
+  _Exit(0);
 
   for (auto &inset_state : *cart_info.ref_to_inset_states()) {
 

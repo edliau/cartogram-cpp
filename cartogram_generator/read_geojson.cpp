@@ -9,50 +9,60 @@
 void check_geojson_validity(const nlohmann::json j)
 {
   if (!j.contains(std::string{"type"})) {
-    std::cerr << "ERROR: JSON does not contain a key 'type'" << std::endl;
-    _Exit(4);
+    std::cout << std::endl
+              << "ERROR: JSON does not contain a key 'type'" << std::endl;
+    throw std::invalid_argument("error");
   }
   if (j["type"] != "FeatureCollection") {
-    std::cerr << "ERROR: JSON is not a valid GeoJSON FeatureCollection"
+    std::cout << std::endl
+              << "ERROR: JSON is not a valid GeoJSON FeatureCollection"
               << std::endl;
-    _Exit(5);
+    throw std::invalid_argument("error");
   }
   if (!j.contains(std::string{"features"})) {
-    std::cerr << "ERROR: JSON does not contain a key 'features'" << std::endl;
-    _Exit(6);
+    std::cout << std::endl
+              << "ERROR: JSON does not contain a key 'features'" << std::endl;
+    throw std::invalid_argument("error");
   }
   const nlohmann::json features = j["features"];
   for (auto feature : features) {
     if (!feature.contains(std::string{"type"})) {
-      std::cerr << "ERROR: JSON contains a 'Features' element without key "
+      std::cout << std::endl
+                << "ERROR: JSON contains a 'Features' element without key "
                 << "'type'" << std::endl;
-      _Exit(7);
+      throw std::invalid_argument("error");
     }
     if (feature["type"] != "Feature") {
-      std::cerr << "ERROR: JSON contains a 'Features' element whose type "
+      std::cout << std::endl
+                << "ERROR: JSON contains a 'Features' element whose type "
                 << "is not 'Feature'" << std::endl;
-      _Exit(8);
+      throw std::invalid_argument("error");
     }
     if (!feature.contains(std::string("geometry"))) {
-      std::cerr << "ERROR: JSON contains a feature without key 'geometry'"
+      std::cout << std::endl
+                << "ERROR: JSON contains a feature without key 'geometry'"
                 << std::endl;
-      _Exit(9);
+      throw std::invalid_argument("error");
+
     }
     const nlohmann::json geometry = feature["geometry"];
     if (!geometry.contains(std::string("type"))) {
-      std::cerr << "ERROR: JSON contains geometry without key 'type'"
+      std::cout << std::endl
+                << "ERROR: JSON contains geometry without key 'type'"
                 << std::endl;
-      _Exit(10);
+      throw std::invalid_argument("error");
     }
     if (!geometry.contains(std::string("coordinates"))) {
-      std::cerr << "ERROR: JSON contains geometry without key 'coordinates'"
+      std::cout << std::endl
+                << "ERROR: JSON contains geometry without key 'coordinates'"
                 << std::endl;
-      _Exit(11);
+      throw std::invalid_argument("error");
     }
     if (geometry["type"] != "MultiPolygon" && geometry["type"] != "Polygon") {
-      std::cerr << "ERROR: JSON contains unsupported geometry "
+      std::cout << std::endl
+                << "ERROR: JSON contains unsupported geometry "
                 << geometry["type"] << std::endl;
-      _Exit(12);
+      throw std::invalid_argument("error");
     }
   }
   return;
@@ -88,8 +98,9 @@ GeoDiv json_to_cgal(const std::string id,
                                (double)jphc_ext[last_index][1]));
     }
     if (!ext_ring.is_simple()) {
-      std::cerr << "ERROR: exterior ring not a simple polygon" << std::endl;
-      _Exit(13);
+      std::cout << std::endl
+                << "ERROR: exterior ring not a simple polygon" << std::endl;
+      throw std::invalid_argument("error");
     }
 
     // We adopt the convention that exterior rings are counterclockwise
@@ -115,8 +126,9 @@ GeoDiv json_to_cgal(const std::string id,
                                  (double)jphc_int[last_index][1]));
       }
       if (!int_ring.is_simple()) {
-        std::cerr << "ERROR: interior ring not a simple polygon" << std::endl;
-        _Exit(14);
+        std::cout << std::endl
+                  << "ERROR: interior ring not a simple polygon" << std::endl;
+        throw std::invalid_argument("error");
       }
       if (int_ring.is_counterclockwise_oriented()) {
         int_ring.reverse_orientation();
@@ -177,10 +189,11 @@ void read_geojson(const std::string geometry_file_name,
   try {
     in_file >> j;
   } catch (nlohmann::json::parse_error& e) {
-    std::cerr << "ERROR: " << e.what() << '\n'
+    std::cout << std::endl
+              << "ERROR: " << e.what() << '\n'
               << "exception id: " << e.id << '\n'
               << "byte position of error: " << e.byte << std::endl;
-    _Exit(3);
+    throw std::invalid_argument("error");
   }
   check_geojson_validity(j);
   std::set<std::string> ids_in_geojson;
@@ -201,13 +214,18 @@ void read_geojson(const std::string geometry_file_name,
         const nlohmann::json properties = feature["properties"];
         if (!properties.contains(cart_info->id_header()) &&
             cart_info->id_header() != "") { // Visual file not provided
-          std::cerr << "ERROR: In GeoJSON, there is no property "
-                    << cart_info->id_header()
-                    << " in feature." << std::endl;
-          std::cerr << "Available properties are: "
+          // std::cout << std::endl
+                    // << "ERROR: In GeoJSON, there is no property "
+          //           << cart_info->id_header()
+          //           << " in feature." << std::endl;
+          std::cout << std::endl;
+          std::cout << "There is no property NAME_1." << std::endl;
+          std::cout << std::endl
+                    << "Available properties are: "
                     << properties
                     << std::endl;
-          _Exit(16);
+          throw std::invalid_argument("error");
+          // throw std::invalid_argument("error");
         }
 
         // Use dump() instead of get() so that we can handle string and numeric
@@ -222,15 +240,17 @@ void read_geojson(const std::string geometry_file_name,
         }
         if (inset_state.pos() == cart_info->inset_at_gd(id)) {
           if (ids_in_geojson.contains(id)) {
-            std::cerr << "ERROR: ID "
+            std::cout << std::endl
+                      << "ERROR: ID "
                       << id
                       << " appears more than once in GeoJSON"
                       << std::endl;
-            _Exit(17);
+            throw std::invalid_argument("error");
           }
           if (id == "null") {
-            std::cerr << "ERROR: ID in GeoJSON is null" << std::endl;
-            _Exit(18);
+            std::cout << std::endl
+                      << "ERROR: ID in GeoJSON is null" << std::endl;
+            throw std::invalid_argument("error");
           }
           ids_in_geojson.insert(id);
           const GeoDiv gd = json_to_cgal(id, geometry["coordinates"], is_polygon);
@@ -365,7 +385,7 @@ void read_geojson(const std::string geometry_file_name,
 
     // Closing out_file and exiting
     out_file_csv.close();
-    _Exit(19);
+    throw std::invalid_argument("error");
   }
 
   // Check whether all IDs in visual_variable_file appear in GeoJSON
@@ -377,16 +397,19 @@ void read_geojson(const std::string geometry_file_name,
                       std::inserter(ids_not_in_geojson,
                                     ids_not_in_geojson.end()));
   if (!ids_not_in_geojson.empty()) {
-    std::cerr << "ERROR: Mismatch between GeoJSON and "
+    std::cout << std::endl
+              << "ERROR: Mismatch between GeoJSON and "
               << cart_info->visual_variable_file()
               << "."
               << std::endl;
-    std::cerr << "The following IDs do not appear in the GeoJSON or CSV:"
+    std::cout << std::endl
+              << "The following IDs do not appear in the GeoJSON or CSV:"
               << std::endl;
     for (auto id : ids_not_in_geojson) {
-      std::cerr << "  " << id << std::endl;
+      std::cout << std::endl
+                << "  " << id << std::endl;
     }
-    _Exit(20);
+    throw std::invalid_argument("error");
   }
 
   // Check whether all IDs in GeoJSON appear in visual_variable_file.
@@ -396,18 +419,21 @@ void read_geojson(const std::string geometry_file_name,
                       std::inserter(ids_not_in_vv,
                                     ids_not_in_vv.end()));
   if (!ids_not_in_vv.empty()) {
-    std::cerr << "ERROR: Mismatch between GeoJSON and "
+    std::cout << std::endl
+              << "ERROR: Mismatch between GeoJSON and "
               << cart_info->visual_variable_file()
               << "."
               << std::endl;
-    std::cerr << "The following IDs do not appear in "
+    std::cout << std::endl
+              << "The following IDs do not appear in "
               << cart_info->visual_variable_file()
               << ": "
               << std::endl;
     for (auto id : ids_not_in_vv) {
-      std::cerr << "  " << id << std::endl;
+      std::cout << std::endl
+                << "  " << id << std::endl;
     }
-    _Exit(21);
+    throw std::invalid_argument("error");
   }
   return;
 }
