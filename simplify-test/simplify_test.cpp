@@ -12,7 +12,9 @@ namespace PS = CGAL::Polyline_simplification_2;
 typedef PS::Vertex_base_2<K> Vb;
 typedef CGAL::Constrained_triangulation_face_base_2<K> Fb;
 typedef CGAL::Triangulation_data_structure_2<Vb, Fb> TDS;
-typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, CGAL::Exact_predicates_tag> CDT;
+typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS,
+                                                   CGAL::Exact_predicates_tag>
+    CDT;
 typedef CGAL::Constrained_triangulation_plus_2<CDT> CT;
 typedef PS::Stop_below_count_ratio_threshold Stop;
 typedef PS::Squared_distance_cost Cost;
@@ -64,14 +66,11 @@ void simplify_test() {
 
   // Transfer simplified coordinates from ct to polyline for easy handling
   auto cit = ct.constraints_begin();
-  for (auto vit = ct.points_in_constraint_begin(*cit);
-       vit != ct.points_in_constraint_end(*cit); vit++) {
-    polyline_simplified.push_back(*vit);
+  for (auto v : ct.vertices_in_constraint(*cit)) {
+    polyline_simplified.push_back(v->point());
   }
 
   print_coords(polyline_simplified);
 }
 
-int main() {
-  simplify_test();
-}
+int main() { simplify_test(); }
