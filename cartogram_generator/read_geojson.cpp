@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fstream>
 
-void check_geojson_validity(const nlohmann::json j)
+void check_geojson_validity(const nlohmann::json j,
+                            std::string &geometry_key,
+                            bool &is_polygon)
 {
   if (!j.contains(std::string{"type"})) {
     std::cerr << "ERROR: JSON does not contain a key 'type'" << std::endl;
@@ -22,6 +24,27 @@ void check_geojson_validity(const nlohmann::json j)
     _Exit(6);
   }
   const nlohmann::json features = j["features"];
+
+  // Checking first feature to find geometry
+  auto first_feature = features[0];
+  if (!first_feature.contains(geometry_key)) {
+      std::cout << "WARNING: JSON contains feature(s) without key '"
+                << geometry_key << "'"
+                << std::endl;
+      std::cout << "Assuming key 'coordinates'" << std::endl;
+      geometry_key = "coordinates";
+      is_polygon = true;
+  } else {
+    is_polygon = (first_feature[geometry_key]["type"] == "Polygon");
+  }
+
+  // Issuing polygon warning
+  if (is_polygon) {
+    std::cout << "WARNING: support for Polygon geometry experimental, "
+              << "for best results use MultiPolygon" << "\n";
+  }
+
+
   for (auto feature : features) {
     if (!feature.contains(std::string{"type"})) {
       std::cerr << "ERROR: JSON contains a 'Features' element without key "
@@ -33,26 +56,30 @@ void check_geojson_validity(const nlohmann::json j)
                 << "is not 'Feature'" << std::endl;
       _Exit(8);
     }
-    if (!feature.contains(std::string("geometry"))) {
-      std::cerr << "ERROR: JSON contains a feature without key 'geometry'"
-                << std::endl;
-      _Exit(9);
+    if (!feature.contains(geometry_key)) {
+        std::cerr << "ERROR: JSON contains a feature without key '"
+                  << geometry_key << "'"
+                  << std::endl;
+        _Exit(9);
+
     }
-    const nlohmann::json geometry = feature["geometry"];
-    if (!geometry.contains(std::string("type"))) {
-      std::cerr << "ERROR: JSON contains geometry without key 'type'"
-                << std::endl;
-      _Exit(10);
-    }
-    if (!geometry.contains(std::string("coordinates"))) {
-      std::cerr << "ERROR: JSON contains geometry without key 'coordinates'"
-                << std::endl;
-      _Exit(11);
-    }
-    if (geometry["type"] != "MultiPolygon" && geometry["type"] != "Polygon") {
-      std::cerr << "ERROR: JSON contains unsupported geometry "
-                << geometry["type"] << std::endl;
-      _Exit(12);
+    if (geometry_key == "geometry") {
+      const nlohmann::json geometry = feature[geometry_key];
+      if (!geometry.contains(std::string("type"))) {
+        std::cerr << "ERROR: JSON contains geometry without key 'type'"
+                  << std::endl;
+        _Exit(10);
+      }
+      if (!geometry.contains(std::string("coordinates"))) {
+        std::cerr << "ERROR: JSON contains geometry without key 'coordinates'"
+                  << std::endl;
+        _Exit(11);
+      }
+      if (geometry["type"] != "MultiPolygon" && geometry["type"] != "Polygon") {
+        std::cerr << "ERROR: JSON contains unsupported geometry "
+                  << geometry["type"] << std::endl;
+        _Exit(12);
+      }
     }
   }
   return;
@@ -161,7 +188,7 @@ void read_geojson(const std::string geometry_file_name,
                   CartogramInfo *cart_info,
                   bool make_csv)
 {
-  bool is_polygon;
+  bool is_polygon = false;
 
   // Open file
   std::ifstream in_file(geometry_file_name);
@@ -181,17 +208,16 @@ void read_geojson(const std::string geometry_file_name,
               << "byte position of error: " << e.byte << std::endl;
     _Exit(3);
   }
-  check_geojson_validity(j);
+
+  std::string geometry_key = "geometry";
+
+  check_geojson_validity(j, geometry_key, is_polygon);
   std::set<std::string> ids_in_geojson;
 
 
   // Checking whether Polygon geometry
   nlohmann::json first_feature = j["features"][0];
-  is_polygon = (first_feature["geometry"]["type"] == "Polygon");
-  if (is_polygon) {
-    std::cout << "Warning: support for Polygon geometry experimental, "
-              << "for best results use MultiPolygon" << "\n";
-  }
+
 
   // Vector storing all possible id headers
   std::vector<std::string> possible_keys_for_id;
@@ -209,13 +235,18 @@ void read_geojson(const std::string geometry_file_name,
 
   std::string key_for_id = cart_info->id_header();
 
-  // Checking whether "cartogram_id" found
+  // Checking whether "cartogram_id" found and id_header not found
   if (std::find(possible_keys_for_id.begin(),
                 possible_keys_for_id.end(),
-                "cartogram_id") != possible_keys_for_id.end()) {
+                "cartogram_id") != possible_keys_for_id.end() &&
+      std::find(possible_keys_for_id.begin(),
+                possible_keys_for_id.end(),
+                key_for_id) == possible_keys_for_id.end()) {
 
     // Dealing with old C data
     key_for_id = "cartogram_id";
+  } else if (cartogram_key == "coordinates") {
+    key_for_id = "id";
   }
 
   if (!make_csv) {
@@ -223,14 +254,16 @@ void read_geojson(const std::string geometry_file_name,
     // Iterate through each inset
     for (auto &inset_state : *cart_info->ref_to_inset_states()) {
       for (auto feature : j["features"]) {
-        const nlohmann::json geometry = feature["geometry"];
+        nlohmann::json geometry = feature;
+        if (geometry_key == "geometry") {
+          geometry = feature["geometry"];
+        }
 
         // Storing ID from properties
         const nlohmann::json properties = feature["properties"];
-        if (!properties.contains(key_for_id) &&
-            key_for_id != "") { // Visual file not provided
+        if (!properties.contains(key_for_id)) {
           std::cerr << "ERROR: In GeoJSON, there is no property "
-                    << key_for_id
+                    << cart_info->id_header()
                     << " in feature." << std::endl;
           std::cerr << "Available properties are: "
                     << properties
