@@ -13,6 +13,7 @@
 #include "write_eps.h"
 #include "check_topology.h"
 #include "write_to_json.h"
+#include "smyth_projection.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -197,6 +198,11 @@ int main(const int argc, const char *argv[])
       return EXIT_FAILURE;
     }
 
+    // Use Smyth-Craster Equal Area projection if input is a world map
+    if (cart_info.is_world_map()){
+      project_to_smyth_equal_surface(&inset_state);
+    }
+
     // Rescale map to fit into a rectangular box [0, lx] * [0, ly].
     rescale_map(long_grid_side_length,
                 &inset_state,
@@ -259,6 +265,15 @@ int main(const int argc, const char *argv[])
     write_to_json(cart_json,
                   geo_file_name,
                   (inset_name + "_cartogram_unscaled.geojson"));
+
+    // Reproject map to longitude/latitude if it's a world map
+    if (cart_info.is_world_map()){
+      project_from_smyth_equal_surface(&inset_state);
+      cart_json = cgal_to_json(&inset_state);
+      write_to_json(cart_json,
+                    geo_file_name,
+                    (inset_name + "_cartogram_longitude_latitude.geojson"));
+    }
 
   }
 
