@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "cartogram_info.h"
 #include "inset_state.h"
+#include "smyth_projection.h"
 
 void rescale_map(int long_grid_side_length,
                  InsetState *inset_state,
@@ -13,10 +14,10 @@ void rescale_map(int long_grid_side_length,
   GeoDiv gd0 = inset_state->geo_divs()[0];
   std::vector<Polygon_with_holes> pwhs = gd0.polygons_with_holes();
   CGAL::Bbox_2 bb0 = pwhs[0].bbox();
-  double map_xmin = bb0.xmin();
-  double map_xmax = bb0.xmax();
-  double map_ymin = bb0.ymin();
-  double map_ymax = bb0.ymax();
+  double map_xmin = (is_world_map ? project_x_to_smyth(-180.0) : bb0.xmin());
+  double map_xmax = (is_world_map ? project_x_to_smyth(180.0) : bb0.xmax());
+  double map_ymin = (is_world_map ? project_y_to_smyth(-90.0) : bb0.ymin());
+  double map_ymax = (is_world_map ? project_y_to_smyth(90.0) : bb0.ymax());
 
   // Expand bounding box to enclose all GeoDivs
   for (auto gd : inset_state->geo_divs()) {
