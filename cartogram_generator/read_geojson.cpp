@@ -89,7 +89,7 @@ GeoDiv json_to_cgal(const std::string id,
     }
     if (!ext_ring.is_simple()) {
       std::cerr << "ERROR: exterior ring not a simple polygon" << std::endl;
-      _Exit(13);
+      //_Exit(13);
     }
 
     // We adopt the convention that exterior rings are counterclockwise
