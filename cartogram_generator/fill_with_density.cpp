@@ -5,11 +5,11 @@
 #include <cmath>
 
 bool ray_y_intersects(XYPoint a,
-                       XYPoint b,
-                       double ray_y,
-                       intersection *temp,
-                       double target_density,
-                       double epsilon)
+                      XYPoint b,
+                      double ray_y,
+                      intersection *temp,
+                      double target_density,
+                      double epsilon)
 {
   // Check if intersection is present
   if (((a.y <= ray_y && b.y >= ray_y) ||
@@ -150,11 +150,11 @@ void fill_with_density(InsetState* inset_state,
             curr_point.y = ext_ring[l][1];
             intersection temp;
             if (ray_y_intersects(curr_point,
-                                  prev_point,
-                                  ray_y,
-                                  &temp,
-                                  target_density,
-                                  epsilon)) {
+                                 prev_point,
+                                 ray_y,
+                                 &temp,
+                                 target_density,
+                                 epsilon)) {
               temp.geo_div_id = gd.id();
               intersections.push_back(temp);
             }
@@ -173,11 +173,11 @@ void fill_with_density(InsetState* inset_state,
               curr_point.y = hole[l][1];
               intersection temp;
               if (ray_y_intersects(curr_point,
-                                    prev_point,
-                                    ray_y,
-                                    &temp,
-                                    target_density,
-                                    epsilon)) {
+                                   prev_point,
+                                   ray_y,
+                                   &temp,
+                                   target_density,
+                                   epsilon)) {
 
                 temp.geo_div_id = gd.id();
                 intersections.push_back(temp);
@@ -212,6 +212,9 @@ void fill_with_density(InsetState* inset_state,
       }
     }
   }
+
+  // Setting Horizontal Adjacency graph for automatic coloring
+  inset_state->set_horizontal_adj(map_intersections);
 
   // Filling rho_num and rho_den (rho numerator and denominator)
   // rho_num is the sum of the weight * target_density for each segment of a

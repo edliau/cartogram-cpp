@@ -14,6 +14,7 @@
 #include "check_topology.h"
 #include "write_to_json.h"
 #include "smyth_projection.h"
+#include "auto_color.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -141,6 +142,8 @@ int main(const int argc, const char *argv[])
                 << std::endl;
       return EXIT_FAILURE;
     } catch (const std::runtime_error& e) {
+
+      // Likely due to invalid CSV file
       std::cerr << "ERROR: "
                 << e.what()
                 << std::endl;
@@ -216,15 +219,24 @@ int main(const int argc, const char *argv[])
                     "world_map_projected.geojson");
       //exit(1);
     }
+    // Setting initial area errors
+    inset_state.set_area_errs();
+
+    // Filling density to fill horizontal adjacency map
+    fill_with_density(&inset_state,
+                      cart_info.trigger_write_density_to_eps(),
+                      cart_info.is_world_map());
+
+    // Automatically coloring if no colors provided
+    if (inset_state.colors_empty()) {
+      auto_color(&inset_state);
+    }
 
     // Writing EPS, if requested by command line option
     if (polygons_to_eps) {
       std::cout << "Writing " << inset_name << "_input.eps" << std::endl;
       write_map_to_eps((inset_name + "_input.eps"), &inset_state);
     }
-
-    // Setting initial area errors
-    inset_state.set_area_errs();
 
     // Start map integration
     while (inset_state.n_finished_integrations() < max_integrations &&
@@ -235,9 +247,11 @@ int main(const int argc, const char *argv[])
                 << std::endl;
 
 
-      fill_with_density(&inset_state,
-                        cart_info.trigger_write_density_to_eps(),
-                        cart_info.is_world_map());
+      if (inset_state.n_finished_integrations() > 1) {
+        fill_with_density(&inset_state,
+                          cart_info.trigger_write_density_to_eps(),
+                          cart_info.is_world_map());
+      }
       if (inset_state.n_finished_integrations() == 0) {
         blur_density(5.0,
                      &inset_state,
