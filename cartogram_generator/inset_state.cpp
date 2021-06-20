@@ -203,6 +203,8 @@ void InsetState::set_area_errs()
         target_areas_at(gd.id()) * sum_cart_area / sum_target_area;
       double relative_area_error = std::abs( (gd.area() / obj_area) - 1);
       area_errs[gd.id()] = relative_area_error;
+    } else {
+      area_errs[gd.id()] = 0.0;
     }
   }
 }
