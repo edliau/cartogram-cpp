@@ -18,6 +18,6 @@ struct intersection {
   }
 };
 
-void fill_with_density(InsetState*, bool);
+void fill_with_density(InsetState*, bool, bool);
 
 #endif

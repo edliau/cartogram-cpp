@@ -208,6 +208,15 @@ int main(const int argc, const char *argv[])
                 &inset_state,
                 cart_info.is_world_map());
 
+    if (cart_info.is_world_map()){
+      // Printing final cartogram
+      json projected_json = cgal_to_json(&inset_state);
+      write_to_json(projected_json,
+                    geo_file_name,
+                    "world_map_projected.geojson");
+      //exit(1);
+    }
+
     // Writing EPS, if requested by command line option
     if (polygons_to_eps) {
       std::cout << "Writing " << inset_name << "_input.eps" << std::endl;
@@ -227,7 +236,8 @@ int main(const int argc, const char *argv[])
 
 
       fill_with_density(&inset_state,
-                        cart_info.trigger_write_density_to_eps());
+                        cart_info.trigger_write_density_to_eps(),
+                        cart_info.is_world_map());
       if (inset_state.n_finished_integrations() == 0) {
         blur_density(5.0,
                      &inset_state,

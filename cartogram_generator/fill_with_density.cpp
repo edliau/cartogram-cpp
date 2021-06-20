@@ -2,6 +2,7 @@
 #include "inset_state.h"
 #include "write_eps.h"
 #include "fill_with_density.h"
+#include <cmath>
 
 bool ray_y_intersects(XYPoint a,
                        XYPoint b,
@@ -33,7 +34,8 @@ bool ray_y_intersects(XYPoint a,
 }
 
 void fill_with_density(InsetState* inset_state,
-                       bool trigger_write_density_to_eps)
+                       bool trigger_write_density_to_eps,
+                       bool is_world_map)
 {
 
   // Calculate the total current area and total target area, excluding any
@@ -51,6 +53,16 @@ void fill_with_density(InsetState* inset_state,
     }
   }
   double mean_density = total_target_area / total_current_area;
+
+  if (is_world_map){
+    double tmp_total_target_area = 0.0;
+    for (auto gd : inset_state->geo_divs()){
+      double tmp_dens = std::sqrt(inset_state->target_areas_at(gd.id()) / gd.area());
+      tmp_total_target_area += gd.area() * tmp_dens;
+    }
+    mean_density = tmp_total_target_area / total_current_area;
+  }
+
   FTReal2d &rho_init = *inset_state->ref_to_rho_init();
 
   // Initially assign 0 to all densities
@@ -87,6 +99,10 @@ void fill_with_density(InsetState* inset_state,
     double target_density;
     if (!inset_state->target_area_is_missing(gd.id())) {
       target_density = inset_state->target_areas_at(gd.id()) / gd.area();
+      if (is_world_map){
+        target_density = std::sqrt(target_density);
+      }
+      
     } else {
       target_density = mean_density;
     }
