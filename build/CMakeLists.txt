@@ -31,9 +31,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${findFFTW_DIR}")
 cmake_minimum_required(VERSION 3.1)
 project(cartogram LANGUAGES CXX)
 
+# setting appropriate flags
 set(CMAKE_CXX_STANDARD 20)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_BUILD_TYPE Release)
+
+set(Boost_USE_STATIC_LIBS ON)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+set(FFTW_USE_STATIC_LIBS TRUE)
 
 # Detecting appropriate compiler
 if (APPLE)
@@ -46,10 +53,10 @@ endif()
 
 # Finding appropriate packages
 find_package(CGAL)
-find_package(Boost 1.70 COMPONENTS program_options REQUIRED)
+# find_package(Boost 1.70 COMPONENTS program_options REQUIRED)
 find_package(FFTW)
 find_package(Threads REQUIRED)
-find_package(OpenMP REQUIRED)
+# find_package(OpenMP REQUIRED)
 
 # Adding executables needed
 add_executable(
@@ -71,14 +78,49 @@ add_executable(
   ../cartogram_generator/ft_real_2d.cpp
   ../cartogram_generator/interpolate_bilinearly.cpp
   ../cartogram_generator/project.cpp
-  ../cartogram_generator/write_to_json.cpp)
+  ../cartogram_generator/write_to_json.cpp
+)
+
+# testing out
+message("\n\n\n")
+# message(${CGAL::CGAL})
+message("\n\n")
+
+# FFTW
+message(${FFTW_LIBRARIES})
+message("\n\n")
+
+string(REPLACE ".so"
+       ".a;" FFTW_LIBRARIES
+     ${FFTW_LIBRARIES})
+
+message(${FFTW_LIBRARIES})
+message("\n\n")
+
+# BOOST
+# message(${Boost_LIBRARIES})
+# message("\n\n")
+#
+# string(REPLACE ".so"
+#        ".a;" Boost_LIBRARIES
+#      ${Boost_LIBRARIES})
+#
+# message(${Boost_LIBRARIES})
+# message("\n\n")
+
+
+# FFTW
+message(${CMAKE_THREAD_LIBS_INIT})
+message("\n\n")
 
 # Linking appropriate libraries required
 target_link_libraries(
   cartogram
-  ${Boost_LIBRARIES}
-  OpenMP::OpenMP_CXX
-  CGAL::CGAL
+  # -static
+  # ${Boost_LIBRARIES}
+  /usr/lib/x86_64-linux-gnu/libboost_program_options.a
+  # OpenMP::OpenMP_CXX
+  # CGAL::CGAL
   ${FFTW_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
