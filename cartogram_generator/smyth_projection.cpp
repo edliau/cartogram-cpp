@@ -2,11 +2,11 @@
 #include "constants.h"
 #include <cmath>
 
-/* Functions to project map with the Smyth equal-surface projection (also    */
-/* known as Craster rectangular projection). See                             */
-/* https://en.wikipedia.org/wiki/Cylindrical_equal-area_projection           */
-/* The purpose is to create a projection that has a 2:1 aspect ratio so that */
-/* the Fourier transforms work optimally when padding is reduced to zero.    */
+// Functions to project map with the Smyth equal-surface projection (also   
+// known as Craster rectangular projection). See                            
+// https://en.wikipedia.org/wiki/Cylindrical_equal-area_projection          
+// The purpose is to create a projection that has a 2:1 aspect ratio so that
+// the Fourier transforms work optimally when padding is reduced to zero.   
 
 double project_x_to_smyth(double x)
 {
