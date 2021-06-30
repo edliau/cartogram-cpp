@@ -247,7 +247,7 @@ int main(const int argc, const char *argv[])
                 << std::endl;
 
 
-      if (inset_state.n_finished_integrations() > 1) {
+      if (inset_state.n_finished_integrations() >= 1) {
         fill_with_density(&inset_state,
                           cart_info.trigger_write_density_to_eps(),
                           cart_info.is_world_map());
