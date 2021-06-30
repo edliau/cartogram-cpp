@@ -58,9 +58,12 @@ void fill_with_density(InsetState* inset_state,
     double tmp_total_target_area = 0.0;
     for (auto gd : inset_state->geo_divs()){
       double tmp_dens = std::sqrt(inset_state->target_areas_at(gd.id()) / gd.area());
-      tmp_total_target_area += gd.area() * tmp_dens;
+      if (!std::isnan(tmp_dens)){
+        tmp_total_target_area += gd.area() * tmp_dens;
+      }
     }
     mean_density = tmp_total_target_area / total_current_area;
+    std::cout << "Mean density: " << mean_density << std::endl;
   }
 
   FTReal2d &rho_init = *inset_state->ref_to_rho_init();
@@ -284,12 +287,12 @@ void fill_with_density(InsetState* inset_state,
         if (intersections[l].direction == intersections[l + 1].direction) {
 
           // Highlight where intersection is present
-          std::cerr << "Invalid Geometry!" << std::endl;
-          std::cerr << "Intersection of Polygons/Holes/Geodivs" << std::endl;
-          std::cerr << "Y-coordinate: " << ray_y << std::endl;
-          std::cerr << "Left X-coordinate: " << left_x << std::endl;
-          std::cerr << "Right X-coordinate: " << right_x << std::endl;
-          std::cerr << std::endl;
+          // std::cerr << "Invalid Geometry!" << std::endl;
+          // std::cerr << "Intersection of Polygons/Holes/Geodivs" << std::endl;
+          // std::cerr << "Y-coordinate: " << ray_y << std::endl;
+          // std::cerr << "Left X-coordinate: " << left_x << std::endl;
+          // std::cerr << "Right X-coordinate: " << right_x << std::endl;
+          // std::cerr << std::endl;
           // _Exit(8026519);
         }
 
@@ -324,6 +327,25 @@ void fill_with_density(InsetState* inset_state,
       }
     }
   }
+
+  // FILE *f = fopen("rho_init.txt", "w");
+  
+  // if (f == NULL)
+  // {
+  //   printf("Error opening file!\n");
+  //   exit(1);
+  // }
+
+  // for (int i = 0; i < (inset_state->lx()); i++){
+  //   for (int j = 0; j < inset_state->ly(); j++){
+  //     fprintf(f, "%f\n", rho_init(i, j));
+  //   }
+  // }
+
+  // fclose(f);
+  
+  // exit(1);
+
 
   if (trigger_write_density_to_eps) {
     std::string file_name =
