@@ -47,6 +47,12 @@ void InsetState::target_areas_insert(const std::string id, const double area)
   return;
 }
 
+void InsetState::target_areas_update(std::string id, double area)
+{
+  target_areas[id] = area;
+  return;
+}
+
 void InsetState::colors_insert(const std::string id, std::string color)
 {
 
@@ -215,21 +221,15 @@ void InsetState::set_area_errs()
   double sum_target_area = 0.0;
   double sum_cart_area = 0.0;
   for (auto gd : geo_divs_) {
-    if (!target_area_is_missing(gd.id())) {
-      sum_target_area += target_areas_at(gd.id());
-      sum_cart_area += gd.area();
-    }
+    sum_target_area += target_areas_at(gd.id());
+    sum_cart_area += gd.area();
   }
 
   for (auto gd : geo_divs_) {
-    if (!target_area_is_missing(gd.id())) {
-      double obj_area =
-        target_areas_at(gd.id()) * sum_cart_area / sum_target_area;
-      double relative_area_error = std::abs( (gd.area() / obj_area) - 1);
-      area_errs[gd.id()] = relative_area_error;
-    } else {
-      area_errs[gd.id()] = 0.0;
-    }
+    double obj_area =
+      target_areas_at(gd.id()) * sum_cart_area / sum_target_area;
+    double relative_area_error = std::abs( (gd.area() / obj_area) - 1);
+    area_errs[gd.id()] = relative_area_error;
   }
 }
 

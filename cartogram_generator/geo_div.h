@@ -19,6 +19,7 @@ class GeoDiv {
     std::vector<Polygon_with_holes> *ref_to_polygons_with_holes();
     void push_back(const Polygon_with_holes);
     double area() const;
+    double perimeter() const;
     void adjacent_to(const std::string);
     const std::set<std::string> adjacent_geodivs() const;
 };

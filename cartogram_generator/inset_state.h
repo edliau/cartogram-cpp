@@ -58,6 +58,7 @@ public:
   std::vector<GeoDiv> *ref_to_geo_divs();
   void set_geo_divs(std::vector<GeoDiv>);
   void target_areas_insert(std::string, double);
+  void target_areas_update(std::string, double);
   void colors_insert(const std::string, std::string);
   void colors_insert(const std::string, const Color);
   double target_areas_at(const std::string);

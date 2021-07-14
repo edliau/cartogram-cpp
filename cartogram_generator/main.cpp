@@ -220,12 +220,13 @@ int main(const int argc, const char *argv[])
       //exit(1);
     }
     // Setting initial area errors
-    inset_state.set_area_errs();
+    // inset_state.set_area_errs();
 
     // Filling density to fill horizontal adjacency map
     fill_with_density(&inset_state,
                       cart_info.trigger_write_density_to_eps(),
-                      cart_info.is_world_map());
+                      cart_info.is_world_map(),
+                      inset_state.n_finished_integrations());
 
     // Automatically coloring if no colors provided
     if (inset_state.colors_empty()) {
@@ -250,23 +251,36 @@ int main(const int argc, const char *argv[])
       if (inset_state.n_finished_integrations() >= 1) {
         fill_with_density(&inset_state,
                           cart_info.trigger_write_density_to_eps(),
-                          cart_info.is_world_map());
+                          cart_info.is_world_map(),
+                          inset_state.n_finished_integrations());
       }
       if (inset_state.n_finished_integrations() == 0) {
         blur_density(5.0,
                      &inset_state,
                      cart_info.trigger_write_density_to_eps());
+      // } else {
+      //   blur_density(0.0,
+      //                &inset_state,
+      //                cart_info.trigger_write_density_to_eps());
       } else {
-        blur_density(0.0,
-                     &inset_state,
-                     cart_info.trigger_write_density_to_eps());
-      }
+        double blur_width =
+        (std::pow(2.0, 3 - int(inset_state.n_finished_integrations())) > 1e-1) ? std::pow(2.0, 3 - int(inset_state.n_finished_integrations())) : 0.0;
+        std::cout << "Blur width: " << blur_width << "\n";
+        blur_density(blur_width, &inset_state, cart_info.trigger_write_density_to_eps());
+    }
       flatten_density(&inset_state);
       project(&inset_state);
       inset_state.inc_integration();
 
       // Updating area errors
       inset_state.set_area_errs();
+    }
+
+    // Print out area errors
+    
+    std::cout << "Area errors:\n";
+    for (auto gd : inset_state.geo_divs()){
+      std::cout << gd.id() << ": " << inset_state.area_errs_at(gd.id()) << "\n";
     }
 
     // Printing final cartogram

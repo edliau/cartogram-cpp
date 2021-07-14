@@ -35,26 +35,95 @@ bool ray_y_intersects(XYPoint a,
 
 void fill_with_density(InsetState* inset_state,
                        bool trigger_write_density_to_eps,
-                       bool is_world_map)
+                       bool is_world_map,
+                       int num_integrations)
 {
 
-  // Calculate the total current area and total target area, excluding any
-  // missing values
+  // Calculate the total current area
   double total_current_area = 0.0;
   for (auto gd : inset_state->geo_divs()) {
-    if (!inset_state->target_area_is_missing(gd.id())) {
-      total_current_area += gd.area();
-    }
+    total_current_area += gd.area();
   }
+
+  // Run if currently in first integration
+  if (num_integrations == 0){
+
+    // Get temporary target areas, excluding NA values
+    double tmp_total_target_area = 0.0;
+    for (auto gd : inset_state->geo_divs()) {
+      if (!inset_state->target_area_is_missing(gd.id())) {
+        tmp_total_target_area += inset_state->target_areas_at(gd.id());
+      }
+    }
+
+    // Assign target densities to NA regions
+    double total_NA_ratio = 0.0;
+    for (auto gd : inset_state->geo_divs()) {
+      if (inset_state->target_area_is_missing(gd.id())) {
+        total_NA_ratio += gd.area() / total_current_area;
+      }
+    }
+    double total_NA_area = (total_NA_ratio * tmp_total_target_area) / (1 - total_NA_ratio);
+    tmp_total_target_area += total_NA_area;
+    for (auto gd : inset_state->geo_divs()) {
+      if (inset_state->target_area_is_missing(gd.id())) {
+        inset_state->target_areas_update(
+          gd.id(),
+          (gd.area() / total_current_area) / total_NA_ratio * total_NA_area
+        );
+      }
+    }
+
+    // Enlarge target area for regions below perimeter threshold
+    double total_perimeter = 0.0;
+    for (auto gd : inset_state->geo_divs()){
+      total_perimeter += gd.perimeter();
+    }
+    std::unordered_map<std::string, double> gd_thresholds;
+    std::unordered_map<std::string, bool> is_small;
+    double total_small_gd_area = 0.0;
+    for (auto gd : inset_state->geo_divs()){
+      gd_thresholds.insert(std::pair<std::string, double>(
+        gd.id(),
+        std::max(
+          (gd.perimeter() / total_perimeter) * 0.025,
+          is_world_map ? 0.00005 : 0.00025
+        )
+      ));
+      if(inset_state->target_areas_at(gd.id()) / tmp_total_target_area < gd_thresholds.at(gd.id())) {
+        is_small.insert(std::pair<std::string, bool>(gd.id(), true));
+        total_small_gd_area += inset_state->target_areas_at(gd.id());
+      } else {
+        is_small.insert(std::pair<std::string, bool>(gd.id(), false));
+      }
+    }
+    double total_threshold = 0.0;
+    for (auto gd : inset_state->geo_divs()){
+      if (is_small.at(gd.id())){
+        total_threshold += gd_thresholds.at(gd.id());
+      }
+    }
+    double total_threshold_area = (total_threshold * (tmp_total_target_area - total_small_gd_area)) / (1 - total_threshold);
+    for(auto gd : inset_state->geo_divs()) {
+      if(is_small.at(gd.id())) {
+        double threshold_area = (gd_thresholds.at(gd.id()) / total_threshold) * total_threshold_area;
+        double old_target_area = inset_state->target_areas_at(gd.id());
+        inset_state->target_areas_update(gd.id(), threshold_area);
+        tmp_total_target_area += inset_state->target_areas_at(gd.id());
+        tmp_total_target_area -= old_target_area;
+      }
+    }
+    inset_state->set_area_errs();
+  }
+
+  // Calculate the total target area
   double total_target_area = 0.0;
   for (auto gd : inset_state->geo_divs()) {
-    if (!inset_state->target_area_is_missing(gd.id())) {
-      total_target_area += inset_state->target_areas_at(gd.id());
-    }
+    total_target_area += inset_state->target_areas_at(gd.id());
   }
   double mean_density = total_target_area / total_current_area;
 
-  if (is_world_map){
+  if (is_world_map && (num_integrations == 0)){
     double tmp_total_target_area = 0.0;
     for (auto gd : inset_state->geo_divs()){
       double tmp_dens = std::sqrt(inset_state->target_areas_at(gd.id()) / gd.area());
@@ -65,6 +134,27 @@ void fill_with_density(InsetState* inset_state,
     mean_density = tmp_total_target_area / total_current_area;
     std::cout << "Mean density: " << mean_density << std::endl;
   }
+
+  // // Get all target densities
+  // std::unordered_map<std::string, double> target_density_map;
+  // for (auto gd : inset_state->geo_divs()){
+  //   target_density_map.insert(std::pair<std::string, double>(
+  //     gd.id(),
+  //     gd.area() / inset_state->target_areas_at(gd.id())
+  //   ));
+  // }
+  // if (is_world_map && (num_integrations == 0)){
+  //   for (auto gd : inset_state->geo_divs()){
+  //     target_density_map[gd.id()] = std::sqrt(target_density_map[gd.id()]);
+  //   }
+  // } else if (is_world_map && (num_integrations < 10)){
+  //   double tmp_total_target_area = 0.0;
+  //   for (auto gd : inset_state->geo_divs()){
+  //     target_density_map[gd.id()] = std::pow(target_density_map[gd.id()], 1 - 1.0 / (double(num_integrations) + 1));
+  //     tmp_total_target_area += gd.area() * target_density_map[gd.id()];
+  //   }
+  //   mean_density = tmp_total_target_area / total_current_area;
+  // }
 
   FTReal2d &rho_init = *inset_state->ref_to_rho_init();
 
@@ -99,16 +189,20 @@ void fill_with_density(InsetState* inset_state,
 
     // Associative area. It is only called once to find out the target
     // density.
-    double target_density;
-    if (!inset_state->target_area_is_missing(gd.id())) {
-      target_density = inset_state->target_areas_at(gd.id()) / gd.area();
-      if (is_world_map){
-        target_density = std::sqrt(target_density);
-      }
-      
-    } else {
-      target_density = mean_density;
+    // double target_density = target_density_map[gd.id()];
+    double target_density = inset_state->target_areas_at(gd.id()) / gd.area();;
+    if (is_world_map && (num_integrations == 0)){
+      target_density = std::sqrt(target_density);
     }
+    // if (!inset_state->target_area_is_missing(gd.id())) {
+    //   target_density = inset_state->target_areas_at(gd.id()) / gd.area();
+    //   if (is_world_map){
+    //     target_density = std::sqrt(target_density);
+    //   }
+      
+    // } else {
+    //   target_density = mean_density;
+    // }
 
     // Iterate through "polygons with holes" in inset_state
     for (int j = 0; j < gd.n_polygons_with_holes(); ++j) {

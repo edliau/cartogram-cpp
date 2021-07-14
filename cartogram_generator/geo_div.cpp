@@ -1,4 +1,5 @@
 #include "geo_div.h"
+#include <cmath>
 
 GeoDiv::GeoDiv(const std::string i) : id_(i)
 {
@@ -43,6 +44,32 @@ double GeoDiv::area() const
     }
   }
   return a;
+}
+
+double GeoDiv::perimeter() const
+{
+  double p = 0.0;
+  for (auto pwh : polygons_with_holes()){
+    Polygon ext_ring = pwh.outer_boundary();
+    for (unsigned int i = 0; i < ext_ring.size() - 1; i++){
+      double distance = std::sqrt(
+        (ext_ring[i + 1][0] - ext_ring[i][0]) * (ext_ring[i + 1][0] - ext_ring[i][0]) +
+        (ext_ring[i + 1][1] - ext_ring[i][1]) * (ext_ring[i + 1][1] - ext_ring[i][1])
+      );
+      p += ((!std::isnan(distance)) ? distance : 0.0);
+    }
+    for (auto hci = pwh.holes_begin(); hci != pwh.holes_end(); hci++){
+      Polygon hole = *hci;
+      for (unsigned int i = 0; i < hole.size() - 1; i++){
+        double distance = std::sqrt(
+          (hole[i + 1][0] - hole[i][0]) * (hole[i + 1][0] - hole[i][0]) +
+          (hole[i + 1][1] - hole[i][1]) * (hole[i + 1][1] - hole[i][1])
+        );
+        p += ((!std::isnan(distance)) ? distance : 0.0);
+      }
+    }
+  }
+  return p;
 }
 
 void GeoDiv::adjacent_to(const std::string id)
