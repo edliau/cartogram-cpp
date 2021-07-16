@@ -235,6 +235,9 @@ int main(const int argc, const char *argv[])
     inset_state.ref_to_rho_ft()->allocate(lx, ly);
     inset_state.make_fftw_plans_for_rho();
 
+    // Updating target areas that are zero
+    inset_state.update_ta_zero();
+
     // Setting initial area errors
     inset_state.set_area_errors();
 

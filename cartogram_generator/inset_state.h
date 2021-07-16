@@ -77,6 +77,8 @@ public:
   void make_fftw_plans_for_rho();
   double map_scale() const;
   double max_area_error() const;
+  double min_target_area() const;
+  void update_ta_zero();
   unsigned int new_xmin() const;
   unsigned int new_ymin() const;
   unsigned int n_finished_integrations() const;

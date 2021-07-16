@@ -164,6 +164,34 @@ double InsetState::max_area_error() const
   return mae;
 }
 
+// Minimum target area that is great than zero
+double InsetState::min_target_area() const
+{
+  double mta = 0.0;
+
+  for (auto const& [gd_id, target_area] : target_areas_) {
+    if (mta == 0) {
+      mta = target_area;
+    }
+    if (target_area > 0) {
+      mta = std::min(mta, target_area);
+    }
+  }
+  return mta;
+}
+
+// Update those GeoDivs with target_area zero
+void InsetState::update_ta_zero()
+{
+  double mta = min_target_area();
+
+  for (auto const& [gd_id, target_area] : target_areas_) {
+    if (target_area == 0) {
+      target_areas_[gd_id] = mta * 0.5;
+    }
+  }
+}
+
 unsigned int InsetState::new_xmin() const
 {
   return new_xmin_;
