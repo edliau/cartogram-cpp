@@ -112,6 +112,11 @@ void read_csv(const boost::program_options::variables_map vm,
       inset_pos = row[inset_col].get();
       std::string inset_pos_original = inset_pos;
 
+    // Set to C if inset position is blank
+    if (inset_pos == "") {
+      inset_pos = "C";
+    }
+
       // Now it can process inputs like "center"/"left"/"right"
       inset_pos = std::toupper(inset_pos[0]);
 
