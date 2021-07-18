@@ -90,3 +90,11 @@ const std::string CartogramInfo::visual_variable_file() const
 {
   return visual_variable_file_;
 }
+
+void CartogramInfo::set_map_name(std::string map_){
+  map_name_ = map_;
+}
+
+std::string CartogramInfo::map_name() {
+  return map_name_;
+}

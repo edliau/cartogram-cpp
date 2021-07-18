@@ -282,31 +282,29 @@ void read_geojson(const std::string geometry_file_name,
     std::cerr << viable_properties_map.size() + 1 << ". All";
     std::cerr << std::endl << std::endl;
 
-    // Have the user choose which key(s) they want to use as the identifier(s)
-    std::cerr << "Please enter your number here: ";
     unsigned long chosen_number = 0;
-    while (std::cin.fail()
-           || chosen_number < 1
-           || chosen_number > viable_properties_map.size() + 1) {
 
-      // Prompting User for Input
-      std::cerr << "Please enter your number here: ";
-      std::cin >> chosen_number;
-      if (std::cin.fail()) {
-        std::cerr << "Invalid input! Try again." << std::endl;
+    X:
+    // Prompting User for Input
+    std::cerr << "Please enter number of GeoDiv names: ";
+    std::cin >> chosen_number;
+    if (std::cin.fail()) {
+      std::cerr << "Invalid input! Try again." << std::endl << std::endl;
 
-        // Clearing std::cin buffer
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      } else if (chosen_number < 1
-                 || chosen_number > viable_properties_map.size() + 1) {
-        std::cerr << "Please enter a number between 1 and "
-                  << viable_properties_map.size() + 1
-                  << std::endl;
-      }
+      // Clearing std::cin buffer
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      goto X;
+    } else if (chosen_number < 1
+                || chosen_number > viable_properties_map.size() + 1) {
+      std::cerr << "Please enter a number between 1 and "
+                << viable_properties_map.size() + 1
+                << std::endl << std::endl;
+      goto X;
     }
+      
     std::cerr << std::endl;
-
+    std::string GeoDivCol;
     // Declare chosen identifier(s)
     std::map<std::string, std::vector<std::string>> chosen_identifiers;
     size_t i = 0;
@@ -314,6 +312,10 @@ void read_geojson(const std::string geometry_file_name,
       i++;
       if (chosen_number == i
           || chosen_number == viable_properties_map.size() + 1) {
+        chosen_identifiers[key] = value_vec;
+        GeoDivCol = key;
+      }
+      if(key == "cartogram_id") {
         chosen_identifiers[key] = value_vec;
       }
     }
@@ -323,38 +325,41 @@ void read_geojson(const std::string geometry_file_name,
     print_properties_map(viable_properties_map, chosen_number);
     std::cerr << std::endl;
 
+  std::cout << std::endl;
     // Writing CSV
     std::ofstream out_file_csv;
-    out_file_csv.open ("template_from_geojson.csv");
+    out_file_csv.open ("../sample_data/csv_" + cart_info->map_name() + ".csv");
     if (!out_file_csv) {
       throw std::system_error(errno,
                               std::system_category(),
                               "failed to open template_from_geojson.csv");
     }
 
+   int id_size = chosen_identifiers[GeoDivCol].size();
     // Each vector of strings will represent one row
     std::vector<std::vector<std::string>>
-      csv_rows(chosen_identifiers.begin()->second.size() + 1);
+      csv_rows(id_size+1);
 
-    // Converting map into a vector
-    int column = 0;
-    for (auto [column_name, ids] : chosen_identifiers) {
-      csv_rows[0].push_back(column_name);
-      if (column == 0) {
-        csv_rows[0].push_back("Cartogram Data (eg. Population)");
-        csv_rows[0].push_back("Color");
-        csv_rows[0].push_back("Inset");
-        csv_rows[0].push_back("Abbreviation");
+    std::vector<std::string> colnames{"cartogram_id", "Region Data", "Region Name", "Inset"};
+    for(auto colname: colnames) {
+      csv_rows[0].push_back(colname);
+      auto ids = chosen_identifiers[colname];
+      if(colname == "Region Name") {
+        ids = chosen_identifiers[GeoDivCol];
       }
-      for (size_t k = 0; k < ids.size(); k++) {
-        csv_rows[k + 1].push_back(ids[k]);
-        if (column == 0) {
-          for (size_t i = 0; i < 4; i++) {
-            csv_rows[k + 1].push_back("");
+
+      for (int k = 0; k < id_size; k++) {
+        if(colname == "cartogram_id" || colname == "Region Name") {
+          csv_rows[k + 1].push_back(ids[k]);
+        }
+        else {
+          if(colname == "Region Data") {
+          csv_rows[k + 1].push_back("100");
+          } else {
+          csv_rows[k + 1].push_back("");
           }
         }
       }
-      column++;
     }
 
     // Writing to CSV writer object

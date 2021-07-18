@@ -13,6 +13,7 @@ private:
   bool is_world_map_;
   std::string visual_variable_file_;
   bool write_density_to_eps_;
+  std::string map_name_;
 public:
   explicit CartogramInfo(const bool, const std::string, const bool);
   void gd_to_inset_insert(std::string, std::string);
@@ -29,5 +30,7 @@ public:
   double total_cart_target_area() const;
   bool trigger_write_density_to_eps() const;
   const std::string visual_variable_file() const;
+  void set_map_name(std::string);
+  std::string map_name();
 };
 #endif

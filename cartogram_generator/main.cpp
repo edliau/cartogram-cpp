@@ -166,6 +166,16 @@ int main(const int argc, const char *argv[])
     }
   }
 
+    // Determine name of input map
+  std::string map_name = geo_file_name;
+  if (map_name.find_last_of("/\\") != std::string::npos) {
+    map_name = map_name.substr(map_name.find_last_of("/\\") + 1);
+  }
+  if (map_name.find('.') != std::string::npos) {
+    map_name = map_name.substr(0, map_name.find('.'));
+  }
+  cart_info.set_map_name(map_name);
+  
   // Read geometry
   try {
     read_geojson(geo_file_name, &cart_info, make_csv);
@@ -179,14 +189,6 @@ int main(const int argc, const char *argv[])
     return EXIT_FAILURE;
   }
 
-  // Determine name of input map
-  std::string map_name = geo_file_name;
-  if (map_name.find_last_of("/\\") != std::string::npos) {
-    map_name = map_name.substr(map_name.find_last_of("/\\") + 1);
-  }
-  if (map_name.find('.') != std::string::npos) {
-    map_name = map_name.substr(0, map_name.find('.'));
-  }
 
   // Loop over insets
   for (auto &inset_state : *cart_info.ref_to_inset_states()) {
