@@ -5,6 +5,7 @@ add_compile_options(-Wall -Wextra -pedantic)
 cmake_minimum_required(VERSION 3.1)
 project(cartogram LANGUAGES CXX)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 20)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 set(CMAKE_BUILD_TYPE Release)
@@ -16,8 +17,13 @@ find_package(Boost 1.70 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(FFTW REQUIRED fftw3 IMPORTED_TARGET)
-include_directories(PkgConfig::FFTW)
+# Adding Cairo library
+find_package(Cairo)
+include_directories(PkgConfig::FFTW ${Cairo_INCLUDE_DIRS})
 link_libraries(PkgConfig::FFTW)
+
+#target_link_libraries(cartogram ${Cairo_LIBRARIES})
+
 
 # Adding executables needed.
 add_executable(
@@ -65,6 +71,8 @@ elseif(UNIX)
   set(CMAKE_CXX_COMPILER "g++-11")
   set(CMAKE_C_COMPILER "gcc-11")
 
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lcairo")
+
   target_link_libraries(
     cartogram
     ${Boost_LIBRARIES}
@@ -72,5 +80,6 @@ elseif(UNIX)
     ${CMAKE_THREAD_LIBS_INIT}
     PkgConfig::FFTW
     OpenMP::OpenMP_CXX
+    # ${Cairo_LIBRARIES}
   )
 endif()
