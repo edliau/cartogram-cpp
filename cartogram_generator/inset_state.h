@@ -116,6 +116,7 @@ public:
   double total_inset_area() const;
   double total_target_area() const;
   const std::vector<std::vector<intersection> > vertical_adj() const;
+  const std::vector<Point> calculate_intersections() const;
 };
 
 #endif

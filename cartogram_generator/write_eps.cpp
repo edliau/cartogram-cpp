@@ -117,6 +117,7 @@ void write_polygons_to_eps(std::ofstream &eps_file,
     }
   }
 
+  // Plotting graticule lines, if requested by user.
   if (plot_graticule) {
     boost::multi_array<XYPoint, 2> &cum_proj =
       *inset_state->ref_to_cum_proj();
@@ -148,6 +149,22 @@ void write_polygons_to_eps(std::ofstream &eps_file,
       eps_file << "s\n";
     }
   }
+
+  // Plotting graticule lines, if requested.
+  // if (plot_intersections) {
+
+  //  std::vector<Point> intersections = inset_state->calculate_intersections();
+
+  //   for (Point i : intersections) {
+  //
+  //       // Radius of circles representing intersections
+  //       double rad = 0.001 * std::min(inset_state->lx(), inset_state->ly());
+  //
+  //       // Plotting intersection as red circle
+  //       eps_file << i.x() << " " << i.y() << " " << rad << "0 360 arc c\n";
+  //       eps_file << "1 0 0 srgb f\n"
+  //   }
+  // }
   return;
 }
 

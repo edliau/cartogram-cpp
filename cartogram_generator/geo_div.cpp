@@ -79,3 +79,20 @@ std::vector<Polygon_with_holes> *GeoDiv::ref_to_polygons_with_holes()
 {
   return &polygons_with_holes_;
 }
+
+const Bbox GeoDiv::bbox() const
+{
+  double gd_xmin = dbl_inf;
+  double gd_xmax = -dbl_inf;
+  double gd_ymin = dbl_inf;
+  double gd_ymax = -dbl_inf;
+  for (const auto &pgnwh : polygons_with_holes_) {
+    const Bbox pgnwh_bbox = pgnwh.bbox();
+    gd_xmin = std::min(pgnwh_bbox.xmin(), gd_xmin);
+    gd_ymin = std::min(pgnwh_bbox.ymin(), gd_ymin);
+    gd_xmax = std::max(pgnwh_bbox.xmax(), gd_xmax);
+    gd_ymax = std::max(pgnwh_bbox.ymax(), gd_ymax);
+  }
+  Bbox gd_bb(gd_xmin, gd_ymin, gd_xmax, gd_ymax);
+  return gd_bb;
+}
