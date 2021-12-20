@@ -17,8 +17,10 @@ find_package(Boost 1.70 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(FFTW REQUIRED fftw3 IMPORTED_TARGET)
+
 # Adding Cairo library
-find_package(Cairo)
+# find_package(Cairo)
+
 include_directories(PkgConfig::FFTW ${Cairo_INCLUDE_DIRS})
 link_libraries(PkgConfig::FFTW)
 
@@ -54,32 +56,35 @@ add_executable(
 
 # Linking appropriate libraries required.
 if(APPLE)
-  set(CMAKE_CXX_COMPILER "/usr/local/bin/g++-11")
-  set(CMAKE_C_COMPILER "/usr/local/bin/gcc-11")
 
-  # Adding relevant flag for OpenMP.
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+  # Using LLVM clang, installed via homebrew, instaed of Apple clang.
+  if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
 
-  target_link_libraries(
-    cartogram
-    ${Boost_LIBRARIES}
-    CGAL::CGAL
-    ${CMAKE_THREAD_LIBS_INIT}
-    PkgConfig::FFTW
-  )
+    # Homebrew install path on arm64 (apple silicon, M1 etc.) machines.
+    set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+    set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
+  else()
+
+    # Homebrew install path on x86 machines (Intel).
+    set(CMAKE_C_COMPILER "/usr/local/opt/llvm/bin/clang")
+    set(CMAKE_CXX_COMPILER "/usr/local/opt/llvm/bin/clang++")
+  endif()
+
 elseif(UNIX)
   set(CMAKE_CXX_COMPILER "g++-11")
   set(CMAKE_C_COMPILER "gcc-11")
 
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lcairo")
+  # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lcairo")
 
-  target_link_libraries(
-    cartogram
-    ${Boost_LIBRARIES}
-    CGAL::CGAL
-    ${CMAKE_THREAD_LIBS_INIT}
-    PkgConfig::FFTW
-    OpenMP::OpenMP_CXX
-    # ${Cairo_LIBRARIES}
-  )
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lcairo")
+
+target_link_libraries(
+  cartogram
+  ${Boost_LIBRARIES}
+  CGAL::CGAL
+  ${CMAKE_THREAD_LIBS_INIT}
+  PkgConfig::FFTW
+  OpenMP::OpenMP_CXX
+)

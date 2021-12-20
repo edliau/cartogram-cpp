@@ -320,7 +320,7 @@ int main(const int argc, const char *argv[])
 }
 */
 
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 int main(void)
 {
