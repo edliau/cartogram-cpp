@@ -117,8 +117,11 @@ public:
   double total_target_area() const;
   const std::vector<std::vector<intersection> > vertical_adj() const;
 
-  // Function to blur density
+  // Function to blur density, in blur_density.cpp
   void blur_density(const double, bool);
+
+  // Function to write map to EPS, in write_eps.cpp
+  void write_map_to_eps(const std::string, const bool);
 };
 
 #endif

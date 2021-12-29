@@ -153,22 +153,21 @@ void write_graticule_to_eps(std::ofstream &eps_file, InsetState *inset_state)
 }
 
 
-void write_map_to_eps(const std::string eps_name,
-                      const bool plot_graticule,
-                      InsetState *inset_state)
+void InsetState::write_map_to_eps(const std::string eps_name,
+                                  const bool plot_graticule)
 {
   std::ofstream eps_file(eps_name);
-  write_eps_header_and_definitions(eps_file, eps_name, inset_state);
+  write_eps_header_and_definitions(eps_file, eps_name, this);
 
   // Check whether all GeoDivs are colored
   const bool has_colors =
-    (inset_state->colors_size() == inset_state->n_geo_divs());
+    (this->colors_size() == this->n_geo_divs());
   write_polygons_to_eps(eps_file,
                         true,
                         has_colors,
-                        inset_state);
+                        this);
   if (plot_graticule) {
-    write_graticule_to_eps(eps_file, inset_state);
+    write_graticule_to_eps(eps_file, this);
   }
   eps_file << "showpage\n";
   eps_file << "%%EOF\n";

@@ -224,7 +224,7 @@ int main(const int argc, const char *argv[])
           eps_input_filename += "_input.eps";
         }
         std::cerr << "Writing " << eps_input_filename << std::endl;
-        write_map_to_eps(eps_input_filename, plot_graticule, &inset_state);
+        inset_state.write_map_to_eps(eps_input_filename, plot_graticule);
       }
 
       // We make the approximation that the progress towards generating the
@@ -326,8 +326,7 @@ int main(const int argc, const char *argv[])
         }
         std::cerr << "Writing "
                   << eps_output_filename << std::endl;
-        write_map_to_eps(eps_output_filename, plot_graticule,
-                         &inset_state);
+        inset_state.write_map_to_eps(eps_output_filename, plot_graticule);
       }
 
       // Rescale insets in correct proportion to each other
