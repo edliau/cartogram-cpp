@@ -1,6 +1,5 @@
 #include "cartogram_info.h"
 #include "inset_state.h"
-#include "write_eps.h"
 #include "fill_with_density.h"
 
 bool ray_y_intersects(XYPoint a,
@@ -300,7 +299,7 @@ void fill_with_density(bool plot_density, InsetState* inset_state)
       std::to_string(inset_state->n_finished_integrations()) +
       ".eps";
     std::cerr << "Writing " << file_name << std::endl;
-    write_density_to_eps(file_name, rho_init.as_1d_array(), inset_state);
+    inset_state->write_density_to_eps(file_name);
   }
   inset_state->execute_fftw_fwd_plan();
   return;

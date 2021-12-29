@@ -122,6 +122,7 @@ public:
 
   // Function to write map to EPS, in write_eps.cpp
   void write_map_to_eps(const std::string, const bool);
+  void write_density_to_eps(const std::string);
 };
 
 #endif

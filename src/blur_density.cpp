@@ -1,7 +1,6 @@
 #include "constants.h"
 #include "cartogram_info.h"
 #include "inset_state.h"
-#include "write_eps.h"
 #include <iostream>
 
 void InsetState::blur_density(const double blur_width,
@@ -28,7 +27,7 @@ void InsetState::blur_density(const double blur_width,
       std::to_string(this->n_finished_integrations()) +
       ".eps";
     std::cerr << "Writing " << file_name << std::endl;
-    write_density_to_eps(file_name, this->rho_init_.as_1d_array(), this);
+    this->write_density_to_eps(file_name);
   }
   return;
 }

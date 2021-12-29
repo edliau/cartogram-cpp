@@ -14,7 +14,6 @@
 #include "read_geojson.h"
 #include "rescale_map.h"
 #include "simplify_inset.h"
-#include "write_eps.h"
 #include "write_geojson.h"
 #include "xy_point.h"
 #include "parse_arguments.h"

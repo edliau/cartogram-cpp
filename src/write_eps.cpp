@@ -250,28 +250,27 @@ void heatmap_color(const double dens,
   return;
 }
 
-void write_density_to_eps(const std::string eps_name,
-                          const double *density,
-                          InsetState *inset_state)
+void InsetState::write_density_to_eps(const std::string eps_name)
 {
+  const auto density = this->rho_init_.as_1d_array();
   std::ofstream eps_file(eps_name);
-  write_eps_header_and_definitions(eps_file, eps_name, inset_state);
+  write_eps_header_and_definitions(eps_file, eps_name, this);
 
   // Determine range of densities
   double dens_min = dbl_inf;
   double dens_mean = 0.0;
   double dens_max = -dbl_inf;
-  const unsigned int n_grid_cells = inset_state->lx() * inset_state->ly();
+  const unsigned int n_grid_cells = this->lx() * this->ly();
   for (unsigned int k = 0; k < n_grid_cells; ++k) {
     dens_min = std::min(density[k], dens_min);
     dens_mean += density[k];
     dens_max = std::max(density[k], dens_max);
   }
   dens_mean /= n_grid_cells;
-  for (unsigned int i = 0; i < inset_state->lx(); ++i) {
-    for (unsigned int j = 0; j < inset_state->ly(); ++j) {
+  for (unsigned int i = 0; i < this->lx(); ++i) {
+    for (unsigned int j = 0; j < this->ly(); ++j) {
       double r, g, b;
-      heatmap_color(density[i*inset_state->ly() + j],
+      heatmap_color(density[i*this->ly() + j],
                     dens_min,
                     dens_mean,
                     dens_max,
@@ -280,7 +279,7 @@ void write_density_to_eps(const std::string eps_name,
       eps_file << r << " " << g << " " << b << " srgb f\n";
     }
   }
-  write_polygons_to_eps(eps_file, false, false, inset_state);
+  write_polygons_to_eps(eps_file, false, false, this);
   eps_file << "showpage\n";
   eps_file << "%%EOF\n";
   eps_file.close();
