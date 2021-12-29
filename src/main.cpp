@@ -1,6 +1,5 @@
 #include "albers_projection.h"
 #include "auto_color.h"
-#include "blur_density.h"
 #include "cartogram_info.h"
 #include "check_topology.h"
 #include "constants.h"
@@ -268,7 +267,7 @@ int main(const int argc, const char *argv[])
           fill_with_density(plot_density, &inset_state);
         }
         if (blur_width > 0.0) {
-          blur_density(blur_width, plot_density, &inset_state);
+          inset_state.blur_density(blur_width, plot_density);
         }
         flatten_density(&inset_state);
         if (triangulation) {
