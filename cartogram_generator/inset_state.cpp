@@ -388,9 +388,9 @@ const std::vector<Point> InsetState::calculate_intersections() const
 {
   std::vector<Point> intersections;
   for (const auto &gd1 : geo_divs_) {
-    BBox gd1_bb = gd1.bbox();
+    Bbox gd1_bb = gd1.bbox();
     for (const auto &gd2 : geo_divs_) {
-      BBox gd2_bb = gd2.bbox();
+      Bbox gd2_bb = gd2.bbox();
 
       // Calculating intersections only if bounding boxes overlap.
       if (gd1_bb.xmax() < gd2_bb.xmin()
@@ -401,7 +401,7 @@ const std::vector<Point> InsetState::calculate_intersections() const
         // Iterating through all polygons to find intersections
         for (const auto &pgnwh1 : gd1.polygons_with_holes()) {
           for (const auto &pgnwh2 : gd2.polygons_with_holes()) {
-            CGAL::intersection();
+            CGAL::intersection(pgnwh1, pgnwh2, std::back_inserter(intersections));
           }
         }
       }

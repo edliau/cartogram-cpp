@@ -1,4 +1,5 @@
 #include "geo_div.h"
+#include "constants.h"
 
 GeoDiv::GeoDiv(const std::string i) : id_(i)
 {
