@@ -26,34 +26,37 @@ link_libraries(PkgConfig::FFTW PkgConfig::Cairo)
 # Adding C++ files needed for compilation.
 add_executable(
   cartogram
-  src/main.cpp
-  src/geo_div.cpp
-  src/cartogram_info.cpp
-  src/read_csv.cpp
-  src/rescale_map.cpp
-  src/write_cairo.cpp
-  src/write_eps.cpp
-  src/colors.cpp
-  src/check_topology.cpp
-  src/matrix.cpp
-  src/read_geojson.cpp
-  src/intersection.cpp
+  src/albers_projection.cpp
   src/blur_density.cpp
+  src/cartogram_info.cpp
+  src/cgal_typedef.cpp
+  src/check_topology.cpp
+  src/colors.cpp
   src/flatten_density.cpp
   src/ft_real_2d.cpp
+  src/geo_div.cpp
   src/interpolate_bilinearly.cpp
-  src/project.cpp
-  src/simplify_inset.cpp
-  src/write_geojson.cpp
-  src/albers_projection.cpp
+  src/intersection.cpp
+  src/main.cpp
+  src/matrix.cpp
   src/parse_arguments.cpp
+  src/project.cpp
+  src/read_csv.cpp
+  src/read_geojson.cpp
+  src/rescale_map.cpp
+  src/round_point.cpp
+  src/simplify_inset.cpp
+  src/smyth_projection.cpp
+  src/write_cairo.cpp
+  src/write_eps.cpp
+  src/write_geojson.cpp
+
+  # Inset state
   src/inset_state/auto_color.cpp
+  src/inset_state/densify.cpp
   src/inset_state/fill_with_density.cpp
   src/inset_state/inset_state.cpp
-  src/inset_state/densify.cpp
   src/inset_state/scanline_graph.cpp
-  src/smyth_projection.cpp
-  src/round_point.cpp
 )
 
 # Linking appropriate libraries required.

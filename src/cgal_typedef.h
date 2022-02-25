@@ -7,7 +7,7 @@
 
 typedef CGAL::Simple_cartesian<double> Scd;
 typedef CGAL::Polygon_2<Scd> Polygon;
-typedef CGAL::Polygon_with_holes_2<Scd> Polygon_with_holes;
+typedef CGAL::Polygon_with_holes_2<Scd> CGAL_Polygon_with_holes;
 typedef CGAL::Aff_transformation_2<Scd> Transformation;
 typedef CGAL::Point_2<Scd> Point;
 typedef CGAL::Bbox_2 Bbox;
@@ -30,10 +30,9 @@ typedef PS::Squared_distance_cost Cost;
 class Polygon_with_holes: public CGAL_Polygon_with_holes
 {
  public:
-
-    // Inheriting constructors, according to:
-    // https://stackoverflow.com/questions/347358/inheriting-constructors
     using CGAL_Polygon_with_holes::CGAL_Polygon_with_holes;
+    void for_each_point(std::function<void(Point)>) const;
+    void for_each_pair(std::function<void(Point, Point)>) const;
 };
 
 #endif
