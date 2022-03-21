@@ -145,6 +145,11 @@ void InsetState::insert_target_area(const std::string id, const double area)
   return;
 }
 
+ std::vector<std::vector<intersection>>
+ InsetState::intersections_of_rays_with_original_geodivs() const {
+   return original_intersections_;
+ }
+
 void InsetState::insert_whether_input_target_area_is_missing(
   const std::string id,
   const bool is_missing)
@@ -351,6 +356,9 @@ void InsetState::store_original_geo_divs()
     }
     geo_divs_original_.push_back(gd_original);
   }
+
+  original_intersections_ =
+    intersections_with_rays_parallel_to_axis('x', 1);
 }
 
 bool InsetState::target_area_is_missing(const std::string id) const

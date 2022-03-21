@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "albers_projection.h"
 #include "blur_density.h"
 #include "cartogram_info.h"
@@ -6,6 +8,7 @@
 #include "flatten_density.h"
 #include "geo_div.h"
 #include "inset_state.h"
+#include "parse_arguments.h"
 #include "project.h"
 #include "read_csv.h"
 #include "read_geojson.h"
@@ -14,22 +17,18 @@
 #include "write_geojson.h"
 #include "write_ps.h"
 #include "xy_point.h"
-#include "parse_arguments.h"
-#include <chrono>
 
-typedef  std::chrono::steady_clock::time_point time_point;
-typedef  std::chrono::high_resolution_clock clock_time;
-typedef  std::chrono::milliseconds ms;
+typedef std::chrono::steady_clock::time_point time_point;
+typedef std::chrono::high_resolution_clock clock_time;
+typedef std::chrono::milliseconds ms;
 
-template <typename T>
-std::chrono::milliseconds inMilliseconds(T duration)
+template <typename T> std::chrono::milliseconds inMilliseconds(T duration)
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 }
 
-int main(const int argc, const char *argv[])
-{
-  
+int main(const int argc, const char *argv[]) {
+
   // Start of main function time
   time_point start_main = clock_time::now();
   std::string geo_file_name, visual_file_name;  // Default values
@@ -65,23 +64,23 @@ int main(const int argc, const char *argv[])
 
   // Parse command-line arguments
   argparse::ArgumentParser arguments = parsed_arguments(
-    argc,
-    argv,
-    geo_file_name,
-    visual_file_name,
-    max_n_graticule_rows_or_cols,
-    target_points_per_inset,
-    world,
-    triangulation,
-    simplify,
-    make_csv,
-    make_polygon_ps,
-    output_equal_area,
-    output_to_stdout,
-    plot_density,
-    plot_graticule,
-    plot_graticule_heatmap,
-    plot_intersections);
+      argc,
+      argv,
+      geo_file_name,
+      visual_file_name,
+      max_n_graticule_rows_or_cols,
+      target_points_per_inset,
+      world,
+      triangulation,
+      simplify,
+      make_csv,
+      make_polygon_ps,
+      output_equal_area,
+      output_to_stdout,
+      plot_density,
+      plot_graticule,
+      plot_graticule_heatmap,
+      plot_intersections);
 
   // Initialize cart_info. It contains all information about the cartogram
   // that needs to be handled by functions called from main().
@@ -96,10 +95,10 @@ int main(const int argc, const char *argv[])
     map_name = map_name.substr(0, map_name.find('.'));
   }
   cart_info.set_map_name(map_name);
-  
+
   // Parsing start time
   time_point start_parse = clock_time::now();
-  
+
   if (!make_csv) {
 
     // Read visual variables (e.g. area, color) from CSV
@@ -137,10 +136,10 @@ int main(const int argc, const char *argv[])
               << std::endl;
     return EXIT_FAILURE;
   }
-  
+
   // Parsing end time
   time_point end_parse = clock_time::now();
-  
+
   std::cerr << "Coordinate reference system: " << crs << std::endl;
 
   // Progress measured on a scale from 0 (start) to 1 (end)
@@ -154,10 +153,10 @@ int main(const int argc, const char *argv[])
     auto &inset_state = inset_info.second;
     total_geo_divs += inset_state.n_geo_divs();
   }
-  
+
   // Albers projection start time
   time_point start_albers_proj = clock_time::now();
-  
+
   // Project map and ensure that all holes are inside polygons
   for (auto &[inset_pos, inset_state] : *cart_info.ref_to_inset_states()) {
 
@@ -188,7 +187,7 @@ int main(const int argc, const char *argv[])
       return EXIT_FAILURE;
     }
   }
-  
+
   // Albers projection end time
   time_point end_albers_proj = clock_time::now();
 
@@ -197,7 +196,7 @@ int main(const int argc, const char *argv[])
 
   // Create map to store duration of each inset integrations
   std::map<std::string, ms> insets_integration_times;
-  
+
   // Loop over insets
   for (auto &[inset_pos, inset_state] : *cart_info.ref_to_inset_states()) {
 
@@ -215,23 +214,24 @@ int main(const int argc, const char *argv[])
       // Simplify inset if -s flag is passed. This option reduces the number
       // of points used to represent the GeoDivs in the inset, thereby
       // reducing the output file sizes and run times.
-      simplify_inset(&inset_state,
-                     target_points_per_inset);
+      simplify_inset(&inset_state, target_points_per_inset);
     }
     if (output_equal_area) {
-      normalize_inset_area(&inset_state,
-                           cart_info.cart_total_target_area(),
-                           output_equal_area);
+      normalize_inset_area(
+          &inset_state,
+          cart_info.cart_total_target_area(),
+          output_equal_area);
     } else {
 
       // Rescale map to fit into a rectangular box [0, lx] * [0, ly]
-      rescale_map(max_n_graticule_rows_or_cols,
-                  &inset_state,
-                  cart_info.is_world_map());
-      
+      rescale_map(
+          max_n_graticule_rows_or_cols,
+          &inset_state,
+          cart_info.is_world_map());
+
       // Store original coordinates
       inset_state.store_original_geo_divs();
-      
+
       // Set up Fourier transforms
       const unsigned int lx = inset_state.lx();
       const unsigned int ly = inset_state.ly();
@@ -258,15 +258,15 @@ int main(const int argc, const char *argv[])
         std::cerr << "Writing " << input_filename << std::endl;
         write_map_to_ps(input_filename, true, plot_graticule, &inset_state);
       }
-      
+
       // We make the approximation that the progress towards generating the
       // cartogram is proportional to the number of GeoDivs that are in the
       // finished insets
       const double inset_max_frac = inset_state.n_geo_divs() / total_geo_divs;
-    
+
       // Integration start time
       time_point start_integration = clock_time::now();
-      
+
       // Start map integration
       while (inset_state.n_finished_integrations() < max_integrations &&
              inset_state.max_area_error().value > max_permitted_area_error) {
@@ -339,13 +339,13 @@ int main(const int argc, const char *argv[])
                   << std::endl
                   << std::endl;
       }
-      
+
       // Integration end time
       time_point end_integration = clock_time::now();
-      
+
       // Add integration time to the map
-      insets_integration_times[inset_pos] = inMilliseconds(end_integration -
-                                                    start_integration);
+      insets_integration_times[inset_pos] =
+          inMilliseconds(end_integration - start_integration);
       progress += inset_max_frac;
       std::cerr << "Finished inset "
                 << inset_pos
@@ -368,7 +368,7 @@ int main(const int argc, const char *argv[])
                   << output_filename << std::endl;
         write_map_to_ps(output_filename, true, plot_graticule, &inset_state);
       }
-      
+
       if(plot_graticule_heatmap) {
         std::string inset_filename = inset_state.inset_name();
         std::string output_filename = inset_filename + "_cartogram_graticule_heatmap.ps";
@@ -382,8 +382,7 @@ int main(const int argc, const char *argv[])
       }
 
       // Rescale insets in correct proportion to each other
-      normalize_inset_area(&inset_state,
-                           cart_info.cart_total_target_area());
+      normalize_inset_area(&inset_state, cart_info.cart_total_target_area());
 
       // Clean up after finishing all Fourier transforms for this inset
       inset_state.destroy_fftw_plans_for_rho();
@@ -391,7 +390,7 @@ int main(const int argc, const char *argv[])
       inset_state.ref_to_rho_ft()->free();
     } // End of loop over insets
   }
-  
+
   // Output a density heatmap's bar
   if (plot_density) {
     std::string output_filename = "density_heatmap_bar.ps";
@@ -399,7 +398,7 @@ int main(const int argc, const char *argv[])
               << output_filename << std::endl;
     write_density_bar_to_ps(output_filename);
   }
-  
+
   // Shift insets so that they do not overlap
   shift_insets_to_target_position(&cart_info);
 
@@ -417,32 +416,29 @@ int main(const int argc, const char *argv[])
                 std::cout,
                 output_to_stdout,
                 &cart_info);
-                
+
   // End of main function time
   time_point end_main = clock_time::now();
-  
+
   // Calculate differences in time
-  ms parsing_time = inMilliseconds(
-    end_parse - start_parse);
-  ms albers_proj_time = inMilliseconds(
-    end_albers_proj - start_albers_proj);
-  ms total_time = inMilliseconds(
-    end_main - start_main);
-  
+  ms parsing_time = inMilliseconds(end_parse - start_parse);
+  ms albers_proj_time = inMilliseconds(end_albers_proj - start_albers_proj);
+  ms total_time = inMilliseconds(end_main - start_main);
+
   // Show Time Report
   std::cerr << std::endl;
   std::cerr << "********** Time Report **********" << std::endl;
   std::cerr << "Parsing time: " << parsing_time.count() << " ms" << std::endl;
-  std::cerr << "Albers projection time: " << albers_proj_time.count() << " ms" 
+  std::cerr << "Albers projection time: " << albers_proj_time.count() << " ms"
             << std::endl;
-  
-  // Iterate over the map and print integration times  
+
+  // Iterate over the map and print integration times
   for (auto [inset_pos, inset_integration_time] : insets_integration_times) {
     std::cerr << "Integration time for inset " << inset_pos << ": "
               << inset_integration_time.count() << " ms" << std::endl;
   }
   std::cerr << "Total time: " << total_time.count() << " ms" << std::endl;
   std::cerr << "*********************************" << std::endl;
-  
+
   return EXIT_SUCCESS;
 }

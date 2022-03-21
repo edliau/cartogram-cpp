@@ -21,14 +21,19 @@ private:
   Bbox bbox_;  // Bounding box
   fftw_plan bwd_plan_for_rho_;
   std::unordered_map<std::string, Color> colors_;
-  
+
   // Scaling factor to convert albers unit to 512*512 unit
   double latt_const_;
-  
+
   // Cumulative cartogram projection
   boost::multi_array<XYPoint, 2> cum_proj_;
   fftw_plan fwd_plan_for_rho_;
-  std::vector<GeoDiv> geo_divs_, geo_divs_original_;  // Geographic divisions in this inset
+
+  // Geographic divisions in this inset
+  std::vector<GeoDiv> geo_divs_, geo_divs_original_;
+
+  // Intersections of original geo divs
+  std::vector<std::vector<intersection>> original_intersections_;
 
   // Chosen diagonal for each graticule cell
   boost::multi_array<int, 2> graticule_diagonals_;
@@ -85,8 +90,10 @@ public:
                                                    const bool);
   const std::string inset_name() const;
   const std::vector<Segment> intersecting_segments(unsigned int) const;
-  std::vector<std::vector<intersection> >
+  std::vector<std::vector<intersection>>
     intersections_with_rays_parallel_to_axis(char, unsigned int) const;
+  std::vector<std::vector<intersection>>
+    intersections_of_rays_with_original_geodivs() const;
   bool is_input_target_area_missing(const std::string) const;
   std::string label_at(const std::string) const;
   double latt_const() const;
@@ -102,7 +109,7 @@ public:
   void push_back(const GeoDiv);
   boost::multi_array<XYPoint, 2> *ref_to_cum_proj();
   boost::multi_array<XYPoint, 2> *ref_to_original_proj();
-  
+
   std::vector<GeoDiv> *ref_to_geo_divs();
   std::vector<GeoDiv> *ref_to_geo_divs_original();
   boost::multi_array<int, 2> *ref_to_graticule_diagonals();
