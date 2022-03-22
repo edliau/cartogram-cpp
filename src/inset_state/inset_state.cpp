@@ -350,7 +350,7 @@ void InsetState::set_pos(const std::string pos)
 void InsetState::store_original_geo_divs()
 {
   for (const auto &gd : geo_divs_) {
-    GeoDiv gd_original(gd.id() + "_original");
+    GeoDiv gd_original(gd.id()); // + "_original");
     for(auto pwh : gd.polygons_with_holes()) {
       gd_original.push_back(pwh);
     }

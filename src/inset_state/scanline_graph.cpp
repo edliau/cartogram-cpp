@@ -121,6 +121,81 @@ InsetState::intersections_with_rays_parallel_to_axis(
 }
 
 // Creates continuity/adjacency graph using horizontal and vertical scans
+// void InsetState::create_contiguity_graph()
+// {
+//   // Assign integers to GeoDivs
+//   std::map<std::string, unsigned int> int_at_gd;
+//   size_t i = 0;
+//   for (const auto &gd : geo_divs_) {
+//     int_at_gd[gd.id()] = i;
+//     i++;
+//   }
+
+//   // For all points in the inset, determine which GeoDivs have this point in
+//   // their boundaries
+//   std::map<Point, std::vector<unsigned int> > gds_at_point;
+//   for (const auto &gd : geo_divs_) {
+//     const auto gd_as_int = int_at_gd.at(gd.id());
+//     for (const auto &pwh : gd.polygons_with_holes()) {
+//       for (const auto &p : pwh.outer_boundary()) {
+//         gds_at_point[p].push_back(gd_as_int);
+//       }
+//       for (auto h = pwh.holes_begin(); h != pwh.holes_end(); ++h) {
+//         for (const auto &p : (*h)) {
+//           gds_at_point[p].push_back(gd_as_int);
+//         }
+//       }
+//     }
+//   }
+
+//   // Iterate over all points
+//   for (const auto &point_info : gds_at_point) {
+
+//     // Retrieve value from key, value pair
+//     const auto &geo_divs_with_point = point_info.second;
+//     for (unsigned int i = 0; i < geo_divs_with_point.size(); ++i) {
+//       for (unsigned int j = i + 1; j < geo_divs_with_point.size(); ++j) {
+//         const auto gd_i = geo_divs_with_point[i];
+//         const auto gd_j = geo_divs_with_point[j];
+
+//         // Ensure that GeoDivs are different
+//         if (gd_i != gd_j) {
+//           geo_divs_[gd_i].adjacent_to(geo_divs_[gd_j].id());
+//           geo_divs_[gd_j].adjacent_to(geo_divs_[gd_i].id());
+//         }
+//       }
+//     }
+//   }
+
+  // typedef std::vector<Point> polyline;
+  // std::vector<polyline> boundary;
+
+  // auto it = gds_at_point.begin();
+  // auto p0 = it->first;
+  // auto prev_gd_list = it->second;
+  // auto prev_n_gds = prev_gd_list.size();
+  // it++;
+
+  // unsigned int curr_polyline = 0;
+  // for (it; it != gds_at_point.end(); it++) {
+
+  //   const auto &p1 = it->first;
+  //   const auto &gd_list = it->second;
+
+  //   unsigned int n_gds = gd_list.size();
+
+  //   // New polyline
+  //   if (n_gds == 1 && prev_n_gds > 1) {
+  //     // Start new polyline with this point
+  //     boundary[curr_polyline].push_back(p0);
+  //   } else if (prev_n_gds == 1 && n_gds > 1) {
+  //     // End polyline and create a new one
+  //   }
+
+  // }
+// }
+
+// Creates continuity/adjacency graph using horizontal and vertical scans
 void InsetState::create_contiguity_graph(unsigned int resolution)
 {
   // Calculate horizontal and vertical scanlines

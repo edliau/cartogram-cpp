@@ -13,6 +13,7 @@ class GeoDiv {
     GeoDiv();
 
   public:
+    Bbox bbox() const;
     explicit GeoDiv(const std::string);
     const std::set<std::string> adjacent_geodivs() const;
     void adjacent_to(const std::string);

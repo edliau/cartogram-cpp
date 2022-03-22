@@ -35,6 +35,9 @@ private:
   // Intersections of original geo divs
   std::vector<std::vector<intersection>> original_intersections_;
 
+  // Outline of map
+  std::vector<Polygon_with_holes> polygons_with_holes_;
+
   // Chosen diagonal for each graticule cell
   boost::multi_array<int, 2> graticule_diagonals_;
 
