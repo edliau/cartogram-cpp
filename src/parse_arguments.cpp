@@ -24,7 +24,7 @@ argparse::ArgumentParser parsed_arguments(
 {
   // Create parser for arguments using argparse.
   // From https://github.com/p-ranav/argparse
-  argparse::ArgumentParser arguments("./cartogram", "1.0");
+  argparse::ArgumentParser arguments("cartogram", "1.0");
 
   // Positional argument accepting geometry file (GeoJSON, JSON) as input
   arguments.add_argument("geometry_file")
@@ -64,7 +64,7 @@ argparse::ArgumentParser parsed_arguments(
   .help("Boolean: make PS images with graticule?")
   .default_value(false)
   .implicit_value(true);
-  
+
   arguments.add_argument("-h", "--graticule_heatmap_to_ps")
   .help("Boolean: make PS images with graticule heatmap?")
   .default_value(false)

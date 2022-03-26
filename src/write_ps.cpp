@@ -5,6 +5,7 @@
 #include <cairo/cairo.h>
 #include <cairo/cairo-ps.h>
 #include <cairo/cairo-pdf.h>
+#include <CGAL/Boolean_set_operations_2.h>
 
 
 void write_ps_header(const std::string filename,
@@ -475,7 +476,6 @@ void clip_to_polygons(cairo_t *cr,
 
   // Close entire path
   cairo_close_path(cr);
-
   cairo_clip(cr);
 
 }
@@ -495,26 +495,223 @@ void clip_to_polygons(cairo_t *cr,
 //   // Set line width of graticule lines
 //   cairo_set_line_width(cr, 5e-6 * std::min(lx, ly));
 
-  // // Iterate over graticule cells
-  // for (unsigned int i = 0; i < lx - cell_width; i += cell_width) {
-  //   for(unsigned int j = 0; j < ly - cell_width; j += cell_width) {
+//   // Iterate over graticule cells
+//   for (unsigned int i = 0; i < lx - cell_width; i += cell_width) {
+//     for(unsigned int j = 0; j < ly - cell_width; j += cell_width) {
 
-  //     // Set color of the border of the graticule polygon
-  //     cairo_set_source_rgb(cr, colors[i][j].r, colors[i][j].g, colors[i][j].b);
+//       // Set color of the border of the graticule polygon
+//       cairo_set_source_rgb(cr, colors[i][j].r, colors[i][j].g, colors[i][j].b);
 
-  //     // Draw graticule cell by connecting edge points
-  //     const auto cell_edge_points = graticule_cell_edge_points(i, j, inset_state, cell_width,
-  //                                                              plot_equal_area_map);
-  //     cairo_move_to(cr, cell_edge_points[0].x(), ly - cell_edge_points[0].y());
-  //     for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
-  //       cairo_line_to(cr, cell_edge_points[k].x(), ly - cell_edge_points[k].y());
-  //     }
+//       // Draw graticule cell by connecting edge points
+//       const auto cell_edge_points = graticule_cell_edge_points(i, j, inset_state, cell_width,
+//                                                                plot_equal_area_map);
+//       cairo_move_to(cr, cell_edge_points[0].x(), ly - cell_edge_points[0].y());
+//       for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
+//         cairo_line_to(cr, cell_edge_points[k].x(), ly - cell_edge_points[k].y());
+//       }
 
-  //     // Fill the graticule polygon with color
-  //     cairo_fill_preserve(cr);
-  //     cairo_stroke(cr);
-  //   }
-  // }
+//       // Fill the graticule polygon with color
+//       cairo_fill_preserve(cr);
+//       cairo_stroke(cr);
+//     }
+//   }
+// }
+
+// void write_graticule_colors_to_cairo_surface(cairo_t *cr,
+//                                              InsetState *inset_state,
+//                                              bool plot_equal_area_map)
+// {
+//     const unsigned int lx = inset_state->lx();
+//     const unsigned int ly = inset_state->ly();
+//     unsigned int cell_width = 1;
+
+//     // Get colors
+//     const auto colors = graticule_cell_colors(inset_state, cell_width);
+
+
+//     // Set line width of graticule lines
+//     cairo_set_line_width(cr, 5e-6 * std::min(lx, ly));
+
+//     // Get intersections
+//     std::vector<std::vector<intersection>> intersections_with_rays =
+//         inset_state->intersections_of_rays_with_original_geodivs();
+
+//     for (unsigned int y = 0; y < ly; ++y) {
+
+//       // Intersections for one ray
+//       std::vector<intersection> intersections_at_y = intersections_with_rays[y];
+
+//       // Sort intersections in ascending order
+//       std::sort(intersections_at_y.begin(), intersections_at_y.end());
+
+//       for (unsigned int i = 0; i + 1 < intersections_at_y.size(); i += 2) {
+//         const double left_x = intersections_at_y[i].x();
+//         const double right_x = intersections_at_y[i + 1].x();
+
+//         // Fill each cell between intersections
+//         for (unsigned int x = floor(left_x); x <= floor(right_x); ++x) {
+//           // Set color of the border of the graticule polygon
+//           cairo_set_source_rgb(
+//               cr,
+//               colors[x][y].r,
+//               colors[x][y].g,
+//               colors[x][y].b);
+
+//           // Draw graticule cell by connecting edge points
+//           const auto cell_edge_points = graticule_cell_edge_points(
+//               x,
+//               y,
+//               inset_state,
+//               cell_width,
+//               plot_equal_area_map);
+
+//           cairo_move_to(
+//               cr,
+//               cell_edge_points[0].x(),
+//               ly - cell_edge_points[0].y());
+
+//           for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
+//             cairo_line_to(
+//                 cr,
+//                 cell_edge_points[k].x(),
+//                 ly - cell_edge_points[k].y());
+//           }
+
+//           // Fill the graticule polygon with color
+//           cairo_fill_preserve(cr);
+//           cairo_stroke(cr);
+//         }
+//       }
+//     }
+// }
+
+
+// void write_graticule_colors_to_cairo_surface(cairo_t *cr,
+//                                              InsetState *inset_state,
+//                                              bool plot_equal_area_map)
+// {
+//   const unsigned int lx = inset_state->lx();
+//   const unsigned int ly = inset_state->ly();
+//   unsigned int cell_width = 1;
+
+//   // Get colors
+//   const auto colors = graticule_cell_colors(inset_state, cell_width);
+
+//   // clip_to_polygons(cr, plot_equal_area_map, inset_state);
+
+//   // Set line width of graticule lines
+//   cairo_set_line_width(cr, 5e-6 * std::min(lx, ly));
+
+
+//   // Draw cartogram polygons or equal area map polygons
+//   std::vector<GeoDiv> geo_divs = plot_equal_area_map ? inset_state->geo_divs_original():
+//     inset_state->geo_divs();
+
+//   std::vector<GeoDiv> geo_divs_original = inset_state->geo_divs_original();
+//   std::map<std::string, Bbox> original_bboxes;
+
+//   for (const auto &gd : geo_divs_original) {
+//     original_bboxes[gd.id()] = gd.bbox();
+//   }
+
+//   std::vector<std::vector<intersection>> intersections_with_rays =
+//     inset_state->intersections_of_rays_with_original_geodivs();
+
+//   // Clip to shape
+//   for (const auto &gd : geo_divs) {
+//     for (const auto &pwh : gd.polygons_with_holes()) {
+
+//       const auto ext_ring = pwh.outer_boundary();
+//       cairo_new_path(cr);
+//       cairo_move_to(cr, ext_ring[0].x(), ly - ext_ring[0].y());
+
+//       // Plot each point in exterior ring
+//       for (unsigned int i = 1; i < ext_ring.size(); ++i) {
+//         cairo_line_to(cr, ext_ring[i].x(), ly - ext_ring[i].y());
+//       }
+
+//       // Close entire path
+//       cairo_close_path(cr);
+//       cairo_clip(cr);
+
+//       Bbox gd_bbox = original_bboxes.at(gd.id());
+
+//       for (unsigned int y = gd_bbox.ymin() - 1; y < gd_bbox.ymax() + 1; ++y) {
+
+//         // Intersections for one ray
+//         std::vector<intersection> intersections_at_y = intersections_with_rays[y];
+
+//         // Sort intersections in ascending order
+//         std::sort(intersections_at_y.begin(), intersections_at_y.end());
+
+//         for (unsigned int i = 0; i + 1 < intersections_at_y.size(); i += 2) {
+
+//           if (intersections_at_y[i].geo_div_id != gd.id()) {continue;}
+
+//           const double left_x = intersections_at_y[i].x();
+//           const double right_x = intersections_at_y[i + 1].x();
+
+//           // Fill each cell between intersections
+//           for (unsigned int x = floor(left_x) - 2; x <= ceil(right_x) + 2; ++x) {
+//             // Set color of the border of the graticule polygon
+//             cairo_set_source_rgb(
+//                 cr,
+//                 colors[x][y].r,
+//                 colors[x][y].g,
+//                 colors[x][y].b);
+
+//             // Draw graticule cell by connecting edge points
+//             const auto cell_edge_points = graticule_cell_edge_points(
+//                 x,
+//                 y,
+//                 inset_state,
+//                 cell_width,
+//                 plot_equal_area_map);
+
+//             cairo_move_to(
+//                 cr,
+//                 cell_edge_points[0].x(),
+//                 ly - cell_edge_points[0].y());
+
+//             for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
+//               cairo_line_to(
+//                   cr,
+//                   cell_edge_points[k].x(),
+//                   ly - cell_edge_points[k].y());
+//             }
+
+//             // Fill the graticule polygon with color
+//             cairo_fill_preserve(cr);
+//             cairo_stroke(cr);
+//           }
+//         }
+//       }
+
+//       cairo_reset_clip(cr);
+
+//   //     // Iterate over graticule cells
+//   //     for (unsigned int i = gd_bbox.xmin() - 1; i < gd_bbox.xmax() + 1; i += cell_width) {
+//   //       for(unsigned int j = gd_bbox.ymin() - 1; j < gd_bbox.ymax() + 1; j += cell_width) {
+
+//   //           // Set color of the border of the graticule polygon
+//   //           cairo_set_source_rgb(cr, colors[i][j].r, colors[i][j].g, colors[i][j].b);
+
+//   //           // Draw graticule cell by connecting edge points
+//   //           const auto cell_edge_points = graticule_cell_edge_points(i, j, inset_state, cell_width,
+//   //                                                                    plot_equal_area_map);
+//   //           cairo_move_to(cr, cell_edge_points[0].x(), ly - cell_edge_points[0].y());
+//   //           for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
+//   //             cairo_line_to(cr, cell_edge_points[k].x(), ly - cell_edge_points[k].y());
+//   //           }
+
+//   //           // Fill the graticule polygon with color
+//   //           cairo_fill_preserve(cr);
+//   //           cairo_stroke(cr);
+//   //       }
+//   //     }
+//   //     cairo_reset_clip(cr);
+//     }
+//   }
 // }
 
 void write_graticule_colors_to_cairo_surface(cairo_t *cr,
@@ -541,103 +738,86 @@ void write_graticule_colors_to_cairo_surface(cairo_t *cr,
   std::vector<GeoDiv> geo_divs_original = inset_state->geo_divs_original();
   std::map<std::string, Bbox> original_bboxes;
 
-  for (const auto &gd : geo_divs_original) {
-    original_bboxes[gd.id()] = gd.bbox();
-  }
+  // for (const auto &gd : geo_divs_original) {
+  //   original_bboxes[gd.id()] = gd.bbox();
+  // }
 
-  // Get intersections
-  // std::vector<std::vector<intersection> > intersections_with_rays =
+  // std::vector<std::vector<intersection>> intersections_with_rays =
   //   inset_state->intersections_of_rays_with_original_geodivs();
+
+  std::vector<Polygon> all_rings;
 
   // Clip to shape
   for (const auto &gd : geo_divs) {
     for (const auto &pwh : gd.polygons_with_holes()) {
-      const auto ext_ring = pwh.outer_boundary();
-      cairo_reset_clip(cr);
-      cairo_new_path(cr);
-      cairo_move_to(cr, ext_ring[0].x(), ly - ext_ring[0].y());
-
-      // Plot each point in exterior ring
-      for (unsigned int i = 1; i < ext_ring.size(); ++i) {
-        cairo_line_to(cr, ext_ring[i].x(), ly - ext_ring[i].y());
-      }
-
-      // Close entire path
-      cairo_close_path(cr);
-      cairo_clip(cr);
-
-      Bbox gd_bbox = original_bboxes.at(gd.id());
-
-        // Iterate over graticule cells
-      for (unsigned int i = gd_bbox.xmin() - 1; i < gd_bbox.xmax() + 1; i += cell_width) {
-        for(unsigned int j = gd_bbox.ymin() - 1; j < gd_bbox.ymax() + 1; j += cell_width) {
-
-            // Set color of the border of the graticule polygon
-            cairo_set_source_rgb(cr, colors[i][j].r, colors[i][j].g, colors[i][j].b);
-
-            // Draw graticule cell by connecting edge points
-            const auto cell_edge_points = graticule_cell_edge_points(i, j, inset_state, cell_width,
-                                                                     plot_equal_area_map);
-            cairo_move_to(cr, cell_edge_points[0].x(), ly - cell_edge_points[0].y());
-            for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
-              cairo_line_to(cr, cell_edge_points[k].x(), ly - cell_edge_points[k].y());
-            }
-
-            // Fill the graticule polygon with color
-            cairo_fill_preserve(cr);
-            cairo_stroke(cr);
-          }
-        }
-      //   // Intersections for one ray
-      //   std::vector<intersection> intersections_at_y =
-      //     intersections_with_rays[y];
-
-      //   // Sort intersections in ascending order
-      //   std::sort(intersections_at_y.begin(), intersections_at_y.end());
-
-      //   for (unsigned int i = 0; i + 1 < intersections_at_y.size(); i += 2) {
-      //     const double left_x = intersections_at_y[i].x();
-      //     const double right_x = intersections_at_y[i + 1].x();
-
-      //     // Fill each cell between intersections
-      //     for (unsigned int x = floor(left_x) - 10; x <= ceil(right_x) + 10; ++x) {
-
-      //       // Set color of the border of the graticule polygon
-      //       cairo_set_source_rgb(
-      //           cr,
-      //           colors[x][y].r,
-      //           colors[x][y].g,
-      //           colors[x][y].b);
-
-      //       // Draw graticule cell by connecting edge points
-      //       const auto cell_edge_points = graticule_cell_edge_points(
-      //           x,
-      //           y,
-      //           inset_state,
-      //           cell_width,
-      //           plot_equal_area_map);
-
-      //       cairo_move_to(
-      //           cr,
-      //           cell_edge_points[0].x(),
-      //           ly - cell_edge_points[0].y());
-
-      //       for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
-      //         cairo_line_to(
-      //             cr,
-      //             cell_edge_points[k].x(),
-      //             ly - cell_edge_points[k].y());
-      //       }
-
-      //       // Fill the graticule polygon with color
-      //       cairo_fill_preserve(cr);
-      //       cairo_stroke(cr);
-      //     }
-      //   }
-      // }
+      all_rings.push_back(pwh.outer_boundary());
+      std::
     }
   }
+
+  Polygon_set S;
+  S.join(all_rings.begin(), all_rings.end());
+
+  std::cout << "The result contains " << S.number_of_polygons_with_holes()
+            << " components:" << std::endl;
+
+  // // Clip to shape
+  // for (const auto &gd : geo_divs) {
+  //   for (const auto &pwh : gd.polygons_with_holes()) {
+  //     CGAL::join(pwh.outer_boundary(), boundary, boundary);
+  //   }
+  // }
+
+  // std::cout << "Boundary: " << "\n";
+  // std::cout << boundary;
+
+  // Set line width of graticule lines
+  cairo_set_line_width(cr, 5e-6 * std::min(lx, ly));
+
+  std::list<Polygon_with_holes> res;
+  S.polygons_with_holes(std::back_inserter (res));
+  Polygon ext_ring;
+  for (auto it = res.begin(); it != res.end(); ++it) {
+    ext_ring = (*it).outer_boundary();
+    break;
+  }
   cairo_reset_clip(cr);
+  cairo_new_path(cr);
+
+  std::cout << "ext_ring: " << "\n";
+  std::cout << ext_ring;
+  cairo_move_to(cr, ext_ring[0].x(), ly - ext_ring[0].y());
+
+  // Plot each point in exterior ring
+  for (unsigned int i = 1; i < ext_ring.size(); ++i) {
+    cairo_line_to(cr, ext_ring[i].x(), ly - ext_ring[i].y());
+  }
+
+  // Close entire path
+  cairo_close_path(cr);
+  cairo_clip(cr);
+
+  // Iterate over graticule cells
+  for (unsigned int i = 0; i < lx - cell_width; i += cell_width) {
+    for(unsigned int j = 0; j < ly - cell_width; j += cell_width) {
+
+      // Set color of the border of the graticule polygon
+      cairo_set_source_rgb(cr, colors[i][j].r, colors[i][j].g, colors[i][j].b);
+
+      // Draw graticule cell by connecting edge points
+      const auto cell_edge_points = graticule_cell_edge_points(i, j, inset_state, cell_width,
+                                                               plot_equal_area_map);
+      cairo_move_to(cr, cell_edge_points[0].x(), ly - cell_edge_points[0].y());
+      for (unsigned int k = 1; k < cell_edge_points.size(); ++k) {
+        cairo_line_to(cr, cell_edge_points[k].x(), ly - cell_edge_points[k].y());
+      }
+
+      // Fill the graticule polygon with color
+      cairo_fill_preserve(cr);
+      cairo_stroke(cr);
+    }
+  }
+
 }
 
 void write_polygons_to_cairo_surface(cairo_t *cr,
@@ -730,6 +910,7 @@ void write_map_to_ps(const std::string fname,
                                   colors,
                                   false,
                                   inset_state);
+
 
   // Place labels
   write_labels_to_cairo_surface(cr, inset_state);
@@ -968,7 +1149,7 @@ void write_graticule_heatmap_to_ps(const std::string ps_name,
   // Draw colors
   write_graticule_colors_to_cairo_surface(cr, inset_state, plot_equal_area_map);
 
-  // Draw polygons without color
+  // // Draw polygons without color
   write_polygons_to_cairo_surface(cr,
                                   false,
                                   false,
@@ -981,6 +1162,7 @@ void write_graticule_heatmap_to_ps(const std::string ps_name,
                                                max_area_cell_point_area,
                                                cr, bbox_bar, major_ticks,
                                                minor_ticks, ly);
+
   cairo_show_page(cr);
   cairo_surface_destroy(surface);
   cairo_destroy(cr);
