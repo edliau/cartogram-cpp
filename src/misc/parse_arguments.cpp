@@ -170,7 +170,7 @@ argparse::ArgumentParser parsed_arguments(
   // Print names of geometry and visual-variables files used
   if (arguments.is_used("geometry_file")) {
     geo_file_name = arguments.get<std::string>("geometry_file");
-    std::cerr << "Using geometry from file " << geo_file_name << std::endl;
+    // std::cerr << "Using geometry from file " << geo_file_name << std::endl;
 
   } else {
 
@@ -185,9 +185,9 @@ argparse::ArgumentParser parsed_arguments(
   // Check if a visual-variables file or -m flag is passed
   if (arguments.is_used("visual_variable_file")) {
     visual_file_name = arguments.get<std::string>("visual_variable_file");
-    std::cerr << "Using visual variables from file "
-              << visual_file_name
-              << std::endl;
+    // std::cerr << "Using visual variables from file "
+    //           << visual_file_name
+    //           << std::endl;
   } else if (!make_csv) {
 
     // CSV file not given, and user does not want to create one

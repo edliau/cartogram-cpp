@@ -53,20 +53,20 @@ void InsetState::rescale_map(
     new_xmax = 0.5*(bb.xmax()+bb.xmin()) + 0.5*lx*latt_const;
     new_xmin = 0.5*(bb.xmax()+bb.xmin()) - 0.5*lx*latt_const;
   }
-  std::cerr << "Rescaling to "
-            << lx
-            << "-by-"
-            << ly
-            << " grid with bounding box\n\t("
-            << new_xmin
-            << ", "
-            << new_ymin
-            << ", "
-            << new_xmax
-            << ", "
-            << new_ymax
-            << ")"
-            << std::endl;
+  // std::cerr << "Rescaling to "
+  //           << lx
+  //           << "-by-"
+  //           << ly
+  //           << " grid with bounding box\n\t("
+  //           << new_xmin
+  //           << ", "
+  //           << new_ymin
+  //           << ", "
+  //           << new_xmax
+  //           << ", "
+  //           << new_ymax
+  //           << ")"
+  //           << std::endl;
   set_grid_dimensions(lx, ly);
 
   // Rescale and translate all GeoDiv coordinates
