@@ -1,6 +1,7 @@
 #include "cartogram_info.h"
 #include "constants.h"
 #include "parse_arguments.h"
+#include "inset_state/quadtree.h"
 #include <iostream>
 
 int main(const int argc, const char *argv[])
@@ -223,7 +224,7 @@ int main(const int argc, const char *argv[])
 
       // Start map integration
       while (inset_state.n_finished_integrations() < max_integrations &&
-             inset_state.max_area_error().value > max_permitted_area_error) {
+             inset_state.max_area_error().value > max_permitted_area_error && false) {
         std::cerr << "Integration number "
                   << inset_state.n_finished_integrations()
                   << std::endl;
@@ -324,7 +325,7 @@ int main(const int argc, const char *argv[])
       } else {
 
         // Rescale insets in correct proportion to each other
-        inset_state.normalize_inset_area(cart_info.cart_total_target_area());
+        // inset_state.normalize_inset_area(cart_info.cart_total_target_area());
       }
 
       // Clean up after finishing all Fourier transforms for this inset
@@ -337,6 +338,7 @@ int main(const int argc, const char *argv[])
   // Shift insets so that they do not overlap
   cart_info.shift_insets_to_target_position();
 
+  quadtree_tutorial(&cart_info);
   // Output to GeoJSON
   std::string output_file_name;
   if (output_equal_area) {
