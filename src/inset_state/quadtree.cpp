@@ -12,6 +12,9 @@
 #include <CGAL/Orthtree_traits_d.h>
 #include <CGAL/Simple_cartesian.h>
 
+// Delaunay triangulation
+#include <CGAL/Delaunay_triangulation_2.h>
+
 // Creating alias: type definitions to make code more readable.
 typedef CGAL::Simple_cartesian<double> Kernel; // operating on 2d cartesian surface
 typedef Kernel::Point_2 Point_2; // data structure for 2d point - use .x() and .y() method to access
@@ -19,6 +22,10 @@ typedef Kernel::Point_2 Point_2; // data structure for 2d point - use .x() and .
 typedef std::vector<Point_2> Point_vector; // a vector for Point_2 data structure
 typedef CGAL::Orthtree_traits_2<Kernel> Traits; // Traits define additional properties for quadtree.
 typedef CGAL::Orthtree<Traits, Point_vector> Orthtree; // Orthtree alias
+
+
+// Delaunay Triangulation using Cartesian Kernel
+typedef CGAL::Delaunay_triangulation_2<Kernel> Delaunay;
 
 // Helper functions
 
@@ -31,9 +38,91 @@ void draw_QuadTree(Orthtree &, std::string, unsigned int, unsigned int);
 // Creates point vector from the given map from the command line
 Point_vector get_cartogram_points(CartogramInfo *);
 
+// Quadtree operations
+void quadtree_ds(CartogramInfo *);
+
+// Delaunay operations
+void delaunay_ds(CartogramInfo *);
+
 
 void quadtree_tutorial(CartogramInfo *cartogram_info) {
     
+    // Comment out one of the following lines when working with the another to have clearer terminal output
+    quadtree_ds(cartogram_info);
+    delaunay_ds(cartogram_info);
+}
+
+void delaunay_ds(CartogramInfo *cartogram_info) {
+
+    std::vector<Point_2> points;
+    
+    for (std::size_t i = 1; i <= 10; ++i) {
+        points.push_back(Point_2(i, 2*i*i - 3*i + 3));
+    }
+    
+    // Uncomment the following line to create delaunay triangulation from map vertices.
+    // points = get_cartogram_points(cartogram_info);
+    
+    // Adding points: Complexity: O(1) per insertion
+    Delaunay dt;
+    dt.insert(points.begin(), points.end());
+    
+    std::cout << "Delaunay triangulation created." << std::endl;
+    std::cout << "Number of Verticies: " << dt.number_of_vertices() << std::endl;
+    std::cout << "Number of triangles: " << dt.number_of_faces() << std::endl;
+    
+    // Print the points/vertices
+    for (Delaunay::Finite_vertices_iterator vit = dt.finite_vertices_begin(); vit != dt.finite_vertices_end(); ++vit) {
+        std::cout << "Point: " << vit->point() << std::endl;
+    }
+    
+    // Print the triangles (three vertex coordinate)
+    for (Delaunay::Finite_faces_iterator fit = dt.finite_faces_begin(); fit != dt.finite_faces_end(); ++fit) {
+        std::cout << "Triangle: " << fit->vertex(0)->point() << " \t\t" << fit->vertex(1)->point() << "\t\t " << fit->vertex(2)->point() << std::endl;
+    }
+    
+    // Print the segments (all two points of triangles)
+    for (Delaunay::Finite_edges_iterator eit = dt.finite_edges_begin(); eit != dt.finite_edges_end(); ++eit) {
+        std::cout << "Segment: " << eit->first->vertex(eit->second)->point() << " \t\t" << std::endl;
+    }
+    
+    // Locate a point: Worst case O(n): average O(sqrt(n))
+    Delaunay::Face_handle face = dt.locate(Point_2(1, 1));
+    std::cout << "Locating: (1,1)" << std::endl;
+    std::cout << "(1,1) belongs to triangle: " << face->vertex(0)->point() << " \t\t" << face->vertex(1)->point() << "\t\t " << face->vertex(2)->point() << std::endl;
+   
+   // *********************** Part below is to draw delaunay trianglation using Cairo ******************************
+    // NOTE: Make sure to uncomment line 65 to have meaningful postscript file output
+    // Draw the dt on cairo surface
+    cairo_surface_t *surface = cairo_ps_surface_create("delaunay.ps", 512, 512);
+    cairo_t *cr = cairo_create(surface);
+    
+    //write header
+    write_ps_header("delaunay.ps", surface);
+    
+    // Draw the triangles
+    for (Delaunay::Finite_faces_iterator fit = dt.finite_faces_begin(); fit != dt.finite_faces_end(); ++fit) {
+        Point_2 p1 = fit->vertex(0)->point();
+        Point_2 p2 = fit->vertex(1)->point();
+        Point_2 p3 = fit->vertex(2)->point();
+        
+        // set width of line
+        cairo_set_line_width(cr, 0.05);
+        
+        cairo_move_to(cr, p1.x(), p1.y());
+        cairo_line_to(cr, p2.x(), p2.y());
+        cairo_line_to(cr, p3.x(), p3.y());
+        cairo_line_to(cr, p1.x(), p1.y());
+        cairo_stroke(cr);
+    }
+    
+    cairo_stroke(cr);
+    cairo_show_page(cr);
+    cairo_surface_destroy(surface);
+    cairo_destroy(cr);
+}
+
+void quadtree_ds(CartogramInfo *cartogram_info) {
     Point_vector points_2d;
     
     // Add x = y line points from (1, 1) to (152, 152) to the points_2d vector
@@ -62,6 +151,26 @@ void quadtree_tutorial(CartogramInfo *cartogram_info) {
     // Get root node
     std::cout << "Root: " << quadtree.root() << std::endl;
     
+    // Getting total number of cell(leaf nodes) and unique corner points
+    std::unordered_set<Point_2> corners; // set will remove the duplicates
+    // corners set can be used as a input to dalaunay triangulation
+    int n_nodes = 0;
+    for (Orthtree::Node &node : quadtree.traverse<CGAL::Orthtrees::Preorder_traversal>())
+    {
+        if(node.is_leaf()){
+            n_nodes++;
+            auto bbox = quadtree.bbox(node); // Get bbox of the node
+            
+            // Insert the four vertex of the bbox into the corners set
+            corners.insert(Point_2(bbox.xmin(), bbox.ymin()));
+            corners.insert(Point_2(bbox.xmax(), bbox.ymax()));
+            corners.insert(Point_2(bbox.xmin(), bbox.ymax()));
+            corners.insert(Point_2(bbox.xmax(), bbox.ymin()));
+        }
+    }
+    
+    std::cout << "Number of nodes: " << n_nodes << std::endl;
+    std::cout << "Number of Corners: " << corners.size() << std::endl;
     
     //   |  +-------------------+-------------------+
     // |  | Coord:  Ymax Xmin | Coord:  Ymax Xmax |
