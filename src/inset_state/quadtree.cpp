@@ -23,9 +23,18 @@ typedef std::vector<Point_2> Point_vector; // a vector for Point_2 data structur
 typedef CGAL::Orthtree_traits_2<Kernel> Traits; // Traits define additional properties for quadtree.
 typedef CGAL::Orthtree<Traits, Point_vector> Orthtree; // Orthtree alias
 
-
 // Delaunay Triangulation using Cartesian Kernel
 typedef CGAL::Delaunay_triangulation_2<Kernel> Delaunay;
+
+// Cpp Chrono for timing
+typedef std::chrono::steady_clock::time_point time_point;
+typedef std::chrono::steady_clock clock_time;
+typedef std::chrono::milliseconds ms;
+
+template <typename T> std::chrono::milliseconds inMilliseconds(T duration)
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+}
 
 // Helper functions
 
@@ -90,6 +99,18 @@ void delaunay_ds(CartogramInfo *cartogram_info) {
     Delaunay::Face_handle face = dt.locate(Point_2(1, 1));
     std::cout << "Locating: (1,1)" << std::endl;
     std::cout << "(1,1) belongs to triangle: " << face->vertex(0)->point() << " \t\t" << face->vertex(1)->point() << "\t\t " << face->vertex(2)->point() << std::endl;
+   
+   // Measure time required for locating points
+    time_point start = clock_time::now();
+   
+    for(auto pt: points) {
+        dt.locate(pt);
+    }
+   
+    time_point end = clock_time::now();
+    ms duration = inMilliseconds(end - start);
+    std::cout << "Time taken to locate all " << points.size() << " points: " << duration.count() << " ms" << std::endl;
+   
    
    // *********************** Part below is to draw delaunay trianglation using Cairo ******************************
     // NOTE: Make sure to uncomment line 65 to have meaningful postscript file output
