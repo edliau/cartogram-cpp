@@ -15,6 +15,9 @@
 // Delaunay triangulation
 #include <CGAL/Delaunay_triangulation_2.h>
 
+// Barycentric Coordinates
+#include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
+
 // Creating alias: type definitions to make code more readable.
 typedef CGAL::Simple_cartesian<double> Kernel; // operating on 2d cartesian surface
 typedef Kernel::Point_2 Point_2; // data structure for 2d point - use .x() and .y() method to access
@@ -100,7 +103,27 @@ void delaunay_ds(CartogramInfo *cartogram_info) {
     std::cout << "Locating: (1,1)" << std::endl;
     std::cout << "(1,1) belongs to triangle: " << face->vertex(0)->point() << " \t\t" << face->vertex(1)->point() << "\t\t " << face->vertex(2)->point() << std::endl;
    
-   // Measure time required for locating points
+    //************************************* Line Walk *************************************
+    
+    // Get triangles that intersect the segment of two points
+    Delaunay::Line_face_circulator lfc = dt.line_walk(points[0], points[5]); // arbitary points
+    
+    Delaunay::Line_face_circulator lfc_begin = lfc; // we store the begining iterator
+    
+    do {
+        Delaunay::Face_handle fh = lfc; // get the face
+        
+        // Now we can apply normal face methods to fh like vertex
+        std::cout << "Segment intersects triangle: " << fh->vertex(0)->point() << " \t\t" << fh->vertex(1)->point() << "\t\t " << fh->vertex(2)->point() << std::endl;
+        
+        // move the iterator to the next one
+        ++lfc;
+    } while (lfc != lfc_begin); // we stop when we get back to the first iterator;
+    // since this is a circulator there is no end or beginning, we keep track of our begining iterator,
+    // and when we get back to it we know we have traversed all the intersected face handles.
+    
+    //************************************* Locate Time Testing *************************************
+    // Measure time required for locating points
     time_point start = clock_time::now();
    
     for(auto pt: points) {
@@ -111,6 +134,29 @@ void delaunay_ds(CartogramInfo *cartogram_info) {
     ms duration = inMilliseconds(end - start);
     std::cout << "Time taken to locate all " << points.size() << " points: " << duration.count() << " ms" << std::endl;
    
+   // ******************************* Barycentric Coordinate ********************************************
+   // We first take a face handle/ or any three triangle points would also be enough
+   Delaunay::Face_handle face_b = dt.locate(Point_2(1, 1));
+   
+   // We will store the barycentric coordinate here
+    std::vector<double> barycentric_coordinates;
+    
+    barycentric_coordinates.reserve(3);
+    
+    // We now use the CGAL function to compute the barycentric coordinate
+    CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> bary(face_b->vertex(0)->point(), face_b->vertex(1)->point(), face_b->vertex(2)->point());
+    
+    // Now give our point inside that triangle to get that points barycentric coordinate
+    // the calculated barycentric coordinate will be stored inside the vector barycentric_coordinate
+    bary(Point_2(1, 1), std::back_inserter(barycentric_coordinates));
+    
+    // Now we retrive the barycentric coordinates just by iterating over the vector
+    std::cout << "Barycentric coordinate: ";
+    for(auto bc: barycentric_coordinates) {
+        std::cout << bc << "\t\t";
+    } // if you get different result each time you rerun, do not worry. Barrycenter
+    // function is alright. The issue is with the face_b vertex values. The vertex values 
+    // are different each time we rerun the program.
    
    // *********************** Part below is to draw delaunay trianglation using Cairo ******************************
     // NOTE: Make sure to uncomment line 65 to have meaningful postscript file output
