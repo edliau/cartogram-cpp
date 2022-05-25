@@ -134,31 +134,49 @@ void delaunay_ds(CartogramInfo *cartogram_info) {
     ms duration = inMilliseconds(end - start);
     std::cout << "Time taken to locate all " << points.size() << " points: " << duration.count() << " ms" << std::endl;
    
+
    // ******************************* Barycentric Coordinate ********************************************
    // We first take a face handle/ or any three triangle points would also be enough
    Delaunay::Face_handle face_b = dt.locate(Point_2(1, 1));
    
-   // We will store the barycentric coordinate here
-    std::vector<double> barycentric_coordinates;
+   // ************************************** CGAL 5.3 ****************************************************
+//    // We will store the barycentric coordinate here
+//     std::vector<double> barycentric_coordinates;
     
-    barycentric_coordinates.reserve(3);
+//     barycentric_coordinates.reserve(3);
     
-    // We now use the CGAL function to compute the barycentric coordinate
-    CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> bary(face_b->vertex(0)->point(), face_b->vertex(1)->point(), face_b->vertex(2)->point());
+//     // We now use the CGAL function to compute the barycentric coordinate
+//     CGAL::Barycentric_coordinates::Triangle_coordinates_2<Kernel> bary(face_b->vertex(0)->point(), face_b->vertex(1)->point(), face_b->vertex(2)->point());
     
-    // Now give our point inside that triangle to get that points barycentric coordinate
-    // the calculated barycentric coordinate will be stored inside the vector barycentric_coordinate
-    bary(Point_2(1, 1), std::back_inserter(barycentric_coordinates));
+//     // Now give our point inside that triangle to get that points barycentric coordinate
+//     // the calculated barycentric coordinate will be stored inside the vector barycentric_coordinate
+//     bary(Point_2(1, 1), std::back_inserter(barycentric_coordinates));
     
-    // Now we retrive the barycentric coordinates just by iterating over the vector
-    std::cout << "Barycentric coordinate: ";
-    for(auto bc: barycentric_coordinates) {
-        std::cout << bc << "\t\t";
-    } // if you get different result each time you rerun, do not worry. Barrycenter
+//     // Now we retrive the barycentric coordinates just by iterating over the vector
+//     std::cout << "Barycentric coordinate: ";
+//     for(auto bc: barycentric_coordinates) {
+//         std::cout << bc << "\t\t";
+//     } // if you get different result each time you rerun, do not worry. Barrycenter
+//     // function is alright. The issue is with the face_b vertex values. The vertex values 
+//     // are different each time we rerun the program.
+    
+    // ************************************** CGAL 5.4 ****************************************************
+   
+    // It is possible to use a vector and use the backinserter like CGAL 5.3 example but that might be
+    // redundant considering the direction of the project.
+    std::tuple<Kernel::FT, Kernel::FT, Kernel::FT> bary_coor;
+   
+    bary_coor = CGAL::Barycentric_coordinates::triangle_coordinates_in_tuple_2<Point_2>(
+        face_b->vertex(0)->point(), face_b->vertex(1)->point(), face_b->vertex(2)->point(),
+        Point_2(1, 1)); // three triangle vertices, and then query point
+    
+    std::cout << "Barycentric coordinate: " << std::get<0>(bary_coor) << "\t\t" 
+    << std::get<1>(bary_coor) << "\t\t" << std::get<2>(bary_coor) << std::endl; // using get to access tuple elements
+    // if you get different result each time you rerun, do not worry. Barrycenter
     // function is alright. The issue is with the face_b vertex values. The vertex values 
     // are different each time we rerun the program.
-   
-   // *********************** Part below is to draw delaunay trianglation using Cairo ******************************
+    
+    // *********************** Part below is to draw delaunay trianglation using Cairo ******************************
     // NOTE: Make sure to uncomment line 65 to have meaningful postscript file output
     // Draw the dt on cairo surface
     cairo_surface_t *surface = cairo_ps_surface_create("delaunay.ps", 512, 512);
