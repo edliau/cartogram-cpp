@@ -42,6 +42,8 @@ private:
   unsigned int n_finished_integrations_;
   std::string pos_;  // Position of inset ("C", "T" etc.)
   boost::multi_array<XYPoint, 2> proj_;  // Cartogram projection
+  std::map<XYPoint, XYPoint> proj_map;  // Cartogram projection using
+                                        // quadtree corners
 
   // Rasterized density and its Fourier transform
   FTReal2d rho_ft_, rho_init_;
@@ -83,6 +85,9 @@ public:
   // Density functions
   void fill_with_density(bool);  // Fill map with density, using scanlines
   void flatten_density();  // Flatten said density with integration
+  void flatten_density_quadtree(
+    std::unordered_set<Point>
+  );
 
   const std::vector<GeoDiv> geo_divs() const;
   void holes_inside_polygons();
