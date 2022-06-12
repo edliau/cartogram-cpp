@@ -16,7 +16,7 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 
 // Barycentric Coordinates
-#include <CGAL/Barycentric_coordinates_2/Triangle_coordinates_2.h>
+#include <CGAL/Barycentric_coordinates_2/triangle_coordinates_2.h>
 #include <CGAL/Segment_2.h>
 #include <CGAL/Triangle_2.h>
 #include <CGAL/intersections.h>
