@@ -54,16 +54,16 @@ bool all_points_are_in_domain(
 
 bool all_map_points_are_in_domain(
   double delta_t,
-  std::map<XYPoint, XYPoint> *proj_map,
-  std::map<XYPoint, XYPoint> *v_intp,
+  std::unordered_map<Point, Point> *proj_map,
+  std::unordered_map<Point, Point> *v_intp,
   const unsigned int lx,
   const unsigned int ly
 ) {
   // Return false if and only if there exists a point that would be outside
   // [0, lx] x [0, ly]
   for (auto &[key, val] : (*proj_map)){
-    double x = val.x + 0.5 * delta_t * (*v_intp)[key].x;
-    double y = val.y + 0.5 * delta_t * (*v_intp)[key].y;
+    double x = val.x() + 0.5 * delta_t * (*v_intp)[key].x();
+    double y = val.y() + 0.5 * delta_t * (*v_intp)[key].y();
     if (x < 0.0 || x > lx || y < 0.0 || y > ly) {
       return false;
     }
@@ -91,7 +91,7 @@ void InsetState::flatten_density_quadtree(
   const double abs_tol = (std::min(lx_, ly_) * 1e-6);
 
   for (Point pt : corners){
-    proj_map.insert_or_assign(XYPoint(pt.x(), pt.y()), XYPoint(pt.x(), pt.y()));
+    proj_map.insert_or_assign(pt, pt);
   }
 
   // Allocate memory for the velocity grid
@@ -110,24 +110,24 @@ void InsetState::flatten_density_quadtree(
   // Euler step: move a full time interval delta_t with the velocity at time t
   // and position (proj_[i][j].x, proj_[i][j].y)
   // boost::multi_array<XYPoint, 2> eul(boost::extents[lx_][ly_]);
-  std::map<XYPoint, XYPoint> eul;
+  std::unordered_map<Point, Point> eul;
 
   // mid[i][j] will be the new displacement proposed by the midpoint
   // method (see comment below for the formula)
   // TO-DO: REPLACE WITH A MAP.
   // boost::multi_array<XYPoint, 2> mid(boost::extents[lx_][ly_]);
-  std::map<XYPoint, XYPoint> mid;
+  std::unordered_map<Point, Point> mid;
 
   // (vx_intp, vy_intp) will be the velocity at position (proj_.x, proj_.y) at
   // time t
   // boost::multi_array<XYPoint, 2> v_intp(boost::extents[lx_][ly_]);
-  std::map<XYPoint, XYPoint> v_intp;
+  std::unordered_map<Point, Point> v_intp;
 
   // (vx_intp_half, vy_intp_half) will be the velocity at the midpoint
   // (proj_.x + 0.5*delta_t*vx_intp, proj_.y + 0.5*delta_t*vy_intp) at time
   // t + 0.5*delta_t
   // boost::multi_array<XYPoint, 2> v_intp_half(boost::extents[lx_][ly_]);
-  std::map<XYPoint, XYPoint> v_intp_half;
+  std::unordered_map<Point, Point> v_intp_half;
 
   // Initialize the Fourier transforms of gridvx[] and gridvy[] at
   // every point on the lx_-times-ly_ grid at t = 0. We must typecast lx_ and ly_
@@ -184,28 +184,29 @@ void InsetState::flatten_density_quadtree(
     );
 // #pragma omp parallel for
     for (const auto &[key, val] : proj_map){
-      XYPoint v_intp_val;
-      
+
       // We know, either because of the initialization or because of the
       // check at the end of the last iteration, that (proj_.x, proj_.y)
       // is inside the rectangle [0, lx_] x [0, ly_]. This fact guarantees
       // that interpolate_bilinearly() is given a point that cannot cause it
       // to fail.
-      v_intp_val.x = interpolate_bilinearly(
-        val.x,
-        val.y,
-        &grid_vx,
-        'x',
-        lx_,
-        ly_
-      );
-      v_intp_val.y = interpolate_bilinearly(
-        val.x,
-        val.y,
-        &grid_vy,
-        'y',
-        lx_,
-        ly_
+      Point v_intp_val(
+        interpolate_bilinearly(
+          val.x(),
+          val.y(),
+          &grid_vx,
+          'x',
+          lx_,
+          ly_
+        ),
+        interpolate_bilinearly(
+          val.x(),
+          val.y(),
+          &grid_vy,
+          'y',
+          lx_,
+          ly_
+        )
       );
       v_intp.insert_or_assign(key, v_intp_val);
     }
@@ -217,9 +218,9 @@ void InsetState::flatten_density_quadtree(
 
 // #pragma omp parallel for
       for (const auto &[key, val] : proj_map) {
-        XYPoint eul_val(
-          val.x + v_intp[key].x * delta_t,
-          val.y + v_intp[key].y * delta_t
+        Point eul_val(
+          val.x() + v_intp[key].x() * delta_t,
+          val.y() + v_intp[key].y() * delta_t
         );
         eul.insert_or_assign(key, eul_val);
       }
@@ -251,18 +252,18 @@ void InsetState::flatten_density_quadtree(
 
 // #pragma omp parallel for
         for (const auto &[key, val] : proj_map){
-          XYPoint v_intp_half_val(
+          Point v_intp_half_val(
             interpolate_bilinearly(
-              val.x + 0.5 * delta_t * v_intp[key].x,
-              val.y + 0.5 * delta_t * v_intp[key].y,
+              val.x() + 0.5 * delta_t * v_intp[key].x(),
+              val.y() + 0.5 * delta_t * v_intp[key].y(),
               &grid_vx,
               'x',
               lx_,
               ly_
             ),
             interpolate_bilinearly(
-              val.x + 0.5 * delta_t * v_intp[key].x,
-              val.y + 0.5 * delta_t * v_intp[key].y,
+              val.x() + 0.5 * delta_t * v_intp[key].x(),
+              val.y() + 0.5 * delta_t * v_intp[key].y(),
               &grid_vy,
               'y',
               lx_,
@@ -270,9 +271,9 @@ void InsetState::flatten_density_quadtree(
             )
           );
           v_intp_half.insert_or_assign(key, v_intp_half_val);
-          XYPoint mid_val(
-            val.x + v_intp_half[key].x * delta_t,
-            val.y + v_intp_half[key].y * delta_t
+          Point mid_val(
+            val.x() + v_intp_half[key].x() * delta_t,
+            val.y() + v_intp_half[key].y() * delta_t
           );
           mid.insert_or_assign(key, mid_val);
 
@@ -282,11 +283,11 @@ void InsetState::flatten_density_quadtree(
           // of the positions wandered out of the domain. If one of these
           // problems occurred, decrease the time step.
           const double sq_dist =
-            (mid[key].x-eul[key].x) * (mid[key].x-eul[key].x)
-            + (mid[key].y-eul[key].y) * (mid[key].y-eul[key].y);
+            (mid[key].x() - eul[key].x()) * (mid[key].x() - eul[key].x())
+            + (mid[key].y() - eul[key].y()) * (mid[key].y() - eul[key].y());
           if (sq_dist > abs_tol ||
-              mid[key].x < 0.0 || mid[key].x > lx_ ||
-              mid[key].y < 0.0 || mid[key].y > ly_) {
+              mid[key].x() < 0.0 || mid[key].x() > lx_ ||
+              mid[key].y() < 0.0 || mid[key].y() > ly_) {
             accept = false;
           }
         }
@@ -345,7 +346,8 @@ void InsetState::flatten_density_sanity_check(){
   
   for (unsigned int i = 0; i < lx_; ++i) {
     for (unsigned int j = 0; j < ly_; ++j) {
-      if(!xy_points_almost_equal(proj_[i][j], proj_map[XYPoint(i + 0.5, j + 0.5)])){
+      Point proj_point = Point(proj_[i][j].x, proj_[i][j].y);
+      if(!points_almost_equal(proj_point, proj_map[Point(i + 0.5, j + 0.5)])){
         std::cout << "Flatten_density check failed!\n";
         exit(1);
       }
@@ -465,7 +467,7 @@ void InsetState::flatten_density()
       lx_,
       ly_
     );
-#pragma omp parallel for
+// #pragma omp parallel for
     for (unsigned int i = 0; i < lx_; ++i) {
       for (unsigned int j = 0; j < ly_; ++j) {
 
@@ -497,7 +499,7 @@ void InsetState::flatten_density()
 
       // Simple Euler step.
 
-#pragma omp parallel for
+// #pragma omp parallel for
       for (unsigned int i = 0; i < lx_; ++i) {
         for (unsigned int j = 0; j < ly_; ++j) {
           eul[i][j].x = proj_[i][j].x + v_intp[i][j].x * delta_t;
@@ -530,7 +532,7 @@ void InsetState::flatten_density()
 
         // Okay, we can run interpolate_bilinearly()
 
-#pragma omp parallel for
+// #pragma omp parallel for
         for (unsigned int i = 0; i < lx_; ++i) {
           for (unsigned int j = 0; j < ly_; ++j) {
             v_intp_half[i][j].x = interpolate_bilinearly(

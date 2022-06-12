@@ -42,7 +42,7 @@ private:
   unsigned int n_finished_integrations_;
   std::string pos_;  // Position of inset ("C", "T" etc.)
   boost::multi_array<XYPoint, 2> proj_;  // Cartogram projection
-  std::map<XYPoint, XYPoint> proj_map;  // Cartogram projection using
+  std::unordered_map<Point, Point> proj_map;  // Cartogram projection using
                                         // quadtree corners
 
   // Rasterized density and its Fourier transform
