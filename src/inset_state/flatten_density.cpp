@@ -75,6 +75,8 @@ bool all_map_points_are_in_domain(
 //     ptmap -> insert
 // }
 
+
+
 // Return a map of initial quadtree point to point 
 void InsetState::flatten_density_quadtree(
   std::unordered_set<Point> corners
@@ -179,11 +181,8 @@ void InsetState::flatten_density_quadtree(
       lx_,
       ly_
     );
-#pragma omp parallel for
-
-    for (std::pair<XYPoint, XYPoint> pt_pair : proj_map){
-      XYPoint key = pt_pair.first;
-      XYPoint val = pt_pair.second;
+// #pragma omp parallel for
+    for (const auto &[key, val] : proj_map){
       XYPoint v_intp_val;
       
       // We know, either because of the initialization or because of the
@@ -215,10 +214,8 @@ void InsetState::flatten_density_quadtree(
 
       // Simple Euler step.
 
-#pragma omp parallel for
-      for (std::pair<XYPoint, XYPoint> pt_pair : proj_map) {
-        XYPoint key = pt_pair.first;
-        XYPoint val = pt_pair.second;
+// #pragma omp parallel for
+      for (const auto &[key, val] : proj_map) {
         XYPoint eul_val(
           val.x + v_intp[key].x * delta_t,
           val.y + v_intp[key].y * delta_t
@@ -251,10 +248,8 @@ void InsetState::flatten_density_quadtree(
 
         // Okay, we can run interpolate_bilinearly()
 
-#pragma omp parallel for
-        for (std::pair<XYPoint, XYPoint> pt_pair : proj_map){
-          XYPoint key = pt_pair.first;
-          XYPoint val = pt_pair.second;
+// #pragma omp parallel for
+        for (const auto &[key, val] : proj_map){
           XYPoint v_intp_half_val(
             interpolate_bilinearly(
               val.x + 0.5 * delta_t * v_intp[key].x,
@@ -323,7 +318,6 @@ void InsetState::flatten_density_quadtree(
   grid_fluxy_init.free();
   return;
 }
-
 
 
 
