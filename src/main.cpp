@@ -224,7 +224,7 @@ int main(const int argc, const char *argv[])
 
       // Start map integration
       while (inset_state.n_finished_integrations() < max_integrations &&
-             inset_state.max_area_error().value > max_permitted_area_error && false) {
+             inset_state.max_area_error().value > max_permitted_area_error) {
         std::cerr << "Integration number "
                   << inset_state.n_finished_integrations()
                   << std::endl;
@@ -262,7 +262,8 @@ int main(const int argc, const char *argv[])
         if (plot_intersections) {
           inset_state.write_intersections_to_eps(intersections_resolution);
         }
-        inset_state.flatten_density();
+        // inset_state.flatten_density();
+        inset_state.flatten_density_sanity_check();
         if (triangulation) {
 
           // Choose diagonals that are inside graticule cells
@@ -338,7 +339,7 @@ int main(const int argc, const char *argv[])
   // Shift insets so that they do not overlap
   cart_info.shift_insets_to_target_position();
 
-  quadtree_tutorial(&cart_info);
+  // quadtree_tutorial(&cart_info);
   // Output to GeoJSON
   std::string output_file_name;
   if (output_equal_area) {

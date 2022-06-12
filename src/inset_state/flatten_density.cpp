@@ -1,6 +1,7 @@
 #include "constants.h"
 #include "inset_state.h"
 #include "interpolate_bilinearly.h"
+#include "round_point.h"
 #include <boost/multi_array.hpp>
 #include <omp.h>
 
@@ -319,7 +320,39 @@ void InsetState::flatten_density_quadtree(
   return;
 }
 
+std::unordered_set<Point> generate_test_proj_map(const unsigned int lx, const unsigned int ly){
+  // const int lx = inset_state -> lx();
+  // const int ly = inset_state -> ly();
 
+
+  std::unordered_set<Point> proj_corners;
+
+  for (unsigned int i = 0; i < lx; ++i) {
+    for (unsigned int j = 0; j < ly; ++j) {
+      proj_corners.insert(Point(i + 0.5, j + 0.5));
+    }
+  }
+
+  return proj_corners;
+}
+
+void InsetState::flatten_density_sanity_check(){
+  
+  // Run this function in place of the vanilla flatten_density()
+  std::unordered_set<Point> proj_corners = generate_test_proj_map(lx_, ly_);
+  flatten_density();
+  flatten_density_quadtree(proj_corners);
+  
+  for (unsigned int i = 0; i < lx_; ++i) {
+    for (unsigned int j = 0; j < ly_; ++j) {
+      if(!xy_points_almost_equal(proj_[i][j], proj_map[XYPoint(i + 0.5, j + 0.5)])){
+        std::cout << "Flatten_density check failed!\n";
+        exit(1);
+      }
+    }
+  }
+
+}
 
 
 

@@ -88,6 +88,7 @@ public:
   void flatten_density_quadtree(
     std::unordered_set<Point>
   );
+  void flatten_density_sanity_check();
 
   const std::vector<GeoDiv> geo_divs() const;
   void holes_inside_polygons();
